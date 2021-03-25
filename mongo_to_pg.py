@@ -98,7 +98,7 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
         value_list = []
         for i in range(0, len(mongo_attribute_list)):
             key = mongo_attribute_list[i]
-            unpack_method = retrieve_from_dict(dict, i)
+            unpack_method = retrieve_from_dict(unpack_method_dict, i)
             if type(key) == list:
                 value = retrieve_from_dict_depths_recursively(item, key)
             else:
