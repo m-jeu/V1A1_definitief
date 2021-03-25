@@ -165,7 +165,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
     for session in session_collection:
         session_id = retrieve_from_dict(session, "_id")
-        if session_id is None:
+        if session_id is None: #TODO: Check if this should be removed
             continue
         session_id = str(session_id)
         session_segment = str(retrieve_from_dict(session, "segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
@@ -187,7 +187,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
             for product in session_order:
                 product_id = str(retrieve_from_dict(product, "id"))
                 if product_id in valid_product_ids and not product_id in temp_duplicate_tracker:
-                    ordered_products_dataset.append(session_id, product_id, 1) #FIXME: Account for quantity.
+                    ordered_products_dataset.append((session_id, product_id, 1)) #FIXME: Account for quantity.
                     temp_duplicate_tracker.add(product_id)
 
     for profile in profile_collection:
