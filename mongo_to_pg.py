@@ -195,17 +195,19 @@ if __name__ == "__main__":
     PostgresDAO.db.regenerate_db("DDL1.txt")
     print("PostgreSQL database has been regenerated!", end="\n\n")
 
-    #Fill the Profiles, Bu and Sessions tables in PostgreSQL
-    print("Filling the Profiles, Bu and Sessions tables.")
-    fill_sessions_profiles_bu(PostgresDAO.db)
-    print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
-
     #Fill the products table in PostgreSQL TODO: Add all the missing attributes
     print("Filling the Products table.")
     simple_mongo_to_sql("products",
                         PostgresDAO.db,
                         "Products",
-                        ["_id", "name", ["price", "selling_price"]],
-                        ["product_id", "product_name", "selling_price"],
+                        ["_id", "name", ["price", "selling_price"], "category", "sub_category", "sub_sub_category"],
+                        ["product_id", "product_name", "selling_price", "category", "sub_category", "sub_sub_category"],
                         reject_if_null_amount=2)
     print("The Products table has been filled!", end="\n\n")
+
+    #Fill the Profiles, Bu and Sessions tables in PostgreSQL
+    print("Filling the Profiles, Bu and Sessions tables.")
+    fill_sessions_profiles_bu(PostgresDAO.db)
+    print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
+
+
