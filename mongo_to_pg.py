@@ -18,8 +18,9 @@ def retrieve_from_list(lst: list, index: int):
             return None #could also perhaps be a pass statement
     return None
 
-def retrieve_from_dict(dict: dict, key):
+def retrieve_from_dict(dct: dict, key):
     """Tries to retrieve a value from a dictionairy with a certain key, and catches the KeyError if it doesn't exist.
+    Also checks wether it is actually given a dictionairy.
 
     Args:
         dict: the dictionairy to retrieve the value from.
@@ -27,11 +28,14 @@ def retrieve_from_dict(dict: dict, key):
 
     Returns:
         if the key exists in the dictionairy, returns the value associated with the key.
-        if it doesn't exist, returns None"""
-    try:
-        return dict[key]
-    except KeyError:
-        return None
+        if it doesn't exist, returns None.
+        If given anything but a dict, returns None."""
+    if not isinstance(dct, dict):
+        try:
+            return dct[key]
+        except KeyError:
+            return None
+    return None #readability is key
 
 
 def retrieve_from_dict_depths_recursively(input: dict, keys: list):
@@ -83,7 +87,8 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
                         mongo_attribute_list: list[str or list[str]],
                         postgres_attribute_list: list[str],
                         unpack_method_dict: dict = {"shouldnothappen": "shouldnothappen"},
-                        reject_if_null_amount: int = 0):
+                        reject_if_null_amount: int = 0,
+                        remember_in_existance: int = None):
     """A function to do a 'simple', one to one conversion of certain attributes of a MongoDB collection to a PostgreSQL table.
 
     Args:
@@ -107,9 +112,18 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
         reject_if_null_amount:
             an integer that represents the first n attributes in both of the attribute lists.
             any entries that have the value null within these attributes will not be entered into PostGreSQL.
+        remember_unique_attributes:
+            the index of an attribute that entries in existance have to be stored in python for.
+            if True, returns set of all entries of a certain attribute in existance.
+
+    Returns:
+        if remember_unique_attributes is True, returns set of all entries of a certain attribute in existance.
+        returns None otherwise
         """
     collection = MongodbDAO.getDocuments(mongo_collection_name)
     data_list = []
+    if not remember_in_existance is None: #TODO: think of better var names
+        remember_things_in_existance_set = set()
     for item in collection:
         value_list = []
         for i in range(0, len(mongo_attribute_list)):
@@ -121,16 +135,20 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
                 value = retrieve_from_dict(item, key)
             if unpack_method != None:
                 value = unpack_method(value)
-            if not(isinstance(value, str) or isinstance(value, int) or isinstance(value, float) or value is None):#because pymongo keeps giving us wonky datatypes.
+            if not(isinstance(value, str) or isinstance(value, int) or isinstance(value, float) or value is None):#because pymongo keeps giving us wonky datatypes. TODO: Consider always using str() without checking for type
                 value = str(value)
+            if remember_in_existance == i:
+                remember_things_in_existance_set.add(value)
             value_list.append(value)
         if not (None in value_list[0:reject_if_null_amount]):
             data_list.append(tuple(value_list))
     q = construct_insert_query(postgres_table_name, postgres_attribute_list)
     postgres_db.many_update_queries(q, data_list, fast_execution=True)
+    if not remember_in_existance is None:
+        return remember_things_in_existance_set
 
 
-def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
+def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: set):
     """Fill the session, profile and bu tables in the PostgreSQL db using the profiles and session collections in MongoDB.
 
     Args:
@@ -141,12 +159,13 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     session_dataset = []
     profile_dataset = []
     buid_dataset = []
+    ordered_products_dataset = []
     profile_set = set()
     buid_dict = {}
 
     for session in session_collection:
         session_id = str(retrieve_from_dict(session, "_id"))
-        session_segment = str(retrieve_from_dict(session, "segment"))
+        session_segment = str(retrieve_from_dict(session, "segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
         session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
         if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
             session_buid = retrieve_from_list(session_buid, 0)
@@ -158,6 +177,15 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
         session_dataset.append(session_tuple)
         if not session_buid in buid_dict:#could perhaps remove if-statement and just re-assign None
             buid_dict[session_buid] = None
+
+        session_order = retrieve_from_dict_depths_recursively(session, ["order", "products"])
+        if session_order != None:
+            temp_duplicate_tracker = set() #FIXME: Should also be removed when accounting for quantity
+            for product in session_order:
+                product_id = str(retrieve_from_dict(product, "id"))
+                if product_id in valid_product_ids and not product_id in temp_duplicate_tracker:
+                    ordered_products_dataset.append(session_id, product_id, 1) #FIXME: Account for quantity.
+                    temp_duplicate_tracker.add(product_id)
 
     for profile in profile_collection:
         profile_id = str(retrieve_from_dict(profile, "_id"))
@@ -179,10 +207,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     profile_query = construct_insert_query("Profiles", ["profile_id"])
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
     session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
+    ordered_products_query = construct_insert_query("Ordered_products", ["session_id", "product_id", "quantity"])
 
     db.many_update_queries(profile_query, profile_dataset, fast_execution=True)
     db.many_update_queries(bu_query, buid_dataset, fast_execution=True)
     db.many_update_queries(session_query, session_dataset, fast_execution=True)
+    db.many_update_queries(ordered_products_query, ordered_products_dataset)
 
 
 
@@ -197,12 +227,13 @@ if __name__ == "__main__":
 
     #Fill the products table in PostgreSQL TODO: Add all the missing attributes
     print("Filling the Products table.")
-    simple_mongo_to_sql("products",
-                        PostgresDAO.db,
-                        "Products",
-                        ["_id", "name", ["price", "selling_price"], "category", "sub_category", "sub_sub_category"],
-                        ["product_id", "product_name", "selling_price", "category", "sub_category", "sub_sub_category"],
-                        reject_if_null_amount=2)
+    products_in_existance = simple_mongo_to_sql("products",
+                            PostgresDAO.db,
+                            "Products",
+                            ["_id", "name", ["price", "selling_price"], "category", "sub_category", "sub_sub_category"],
+                            ["product_id", "product_name", "selling_price", "category", "sub_category", "sub_sub_category"],
+                            reject_if_null_amount=2,
+                            remember_in_existance=0)
     print("The Products table has been filled!", end="\n\n")
 
     #Fill the Profiles, Bu and Sessions tables in PostgreSQL
