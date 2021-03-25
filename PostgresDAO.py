@@ -1,5 +1,4 @@
 import psycopg2
-import random
 
 
 #Vul hier je eigen PostgreSQL credentials in:
