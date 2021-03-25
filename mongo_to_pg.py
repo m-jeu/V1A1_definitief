@@ -172,7 +172,9 @@ if __name__ == "__main__":
     def session_buid_unpacker(array):
         """Returns first object in a list.
         Will write nicer function later"""
-        return array[0]
+        if isinstance(array, list) or isinstance(array, tuple):
+            return array[0]
+        return None
 
     print("Filling the Sessions table.")
     simple_mongo_to_sql("sessions",
