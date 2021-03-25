@@ -1,0 +1,61 @@
+DROP TABLE IF EXISTS Ordered_products;
+DROP TABLE IF EXISTS Sessions;
+DROP TABLE IF EXISTS Products;
+DROP TABLE IF EXISTS Categories;
+DROP TABLE IF EXISTS Bu;
+DROP TABLE IF EXISTS Profiles;
+
+CREATE TABLE Profiles
+(
+	profile_id VARCHAR(128) NOT NULL,
+	PRIMARY KEY(profile_id)
+);
+
+CREATE TABlE Bu
+(
+    bu_id VARCHAR(128) NOT NULL,
+    profile_id VARCHAR(128),
+    PRIMARY KEY(bu_id),
+    FOREIGN KEY(profile_id) REFERENCES Profiles(profile_id)
+);
+
+CREATE TABLE Sessions
+(
+	session_id VARCHAR(128) NOT NULL,
+	segment VARCHAR(255),
+	bu_id VARCHAR(128),
+	PRIMARY KEY(session_id),
+	FOREIGN KEY(bu_id) REFERENCES Bu(bu_id)
+);
+
+CREATE TABLE Categories
+(
+	category_id INT NOT NULL,
+	category_name VARCHAR(255) NOT NULL,
+	PRIMARY KEY(category_id)
+);
+
+CREATE TABLE Products
+(
+	product_id VARCHAR(128) NOT NULL,
+	product_name VARCHAR(255) NOT NULL,
+	selling_price INT,
+	category INT,
+	sub_category INT,
+	sub_sub_category INT,
+	sub_sub_sub_category INT,
+	PRIMARY KEY(product_id),
+	FOREIGN KEY(category) REFERENCES Categories(category_id),
+	FOREIGN KEY(sub_category) REFERENCES Categories(category_id),
+	FOREIGN KEY(sub_sub_category) REFERENCES Categories(category_id),
+	FOREIGN KEY(sub_sub_sub_category) REFERENCES Categories(category_id)
+);
+CREATE TABLE Ordered_products
+(
+	session_id VARCHAR(128) NOT NULL,
+	product_id VARCHAR(128) NOT NULL,
+	quantity INT NOT NULL,
+	PRIMARY KEY(session_id, product_id),
+	FOREIGN KEY(session_id) REFERENCES Sessions(session_id),
+	FOREIGN KEY(product_id) REFERENCES Products(product_id)
+);
