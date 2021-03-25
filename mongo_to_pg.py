@@ -1,6 +1,6 @@
 import PostgresDAO
 import MongodbDAO
-
+# test
 
 def retrieve_from_dict(dict: dict, key):
     """Tries to retrieve a value from a dictionairy with a certain key, and catches the KeyError if it doesn't exist.
