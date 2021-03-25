@@ -197,7 +197,8 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
                 profile_buid = str(profile_buid)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
-                profile_set.add(profile_id)
+                    
+        profile_set.add(profile_id)
 
     for buid, profile in buid_dict.items():
         buid_dataset.append((buid, profile))
