@@ -170,7 +170,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     session_dataset = []
     profile_dataset = []
     buid_dataset = []
-    profile_set = {}
+    profile_set = set()
     buid_dict = {}
 
     for session in session_collection:
