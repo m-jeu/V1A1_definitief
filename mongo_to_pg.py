@@ -164,7 +164,10 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     buid_dict = {}
 
     for session in session_collection:
-        session_id = str(retrieve_from_dict(session, "_id"))
+        session_id = retrieve_from_dict(session, "_id")
+        if session_id is None:
+            continue
+        session_id = str(session_id)
         session_segment = str(retrieve_from_dict(session, "segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
         session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
         if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
@@ -212,7 +215,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     db.many_update_queries(profile_query, profile_dataset, fast_execution=True)
     db.many_update_queries(bu_query, buid_dataset, fast_execution=True)
     db.many_update_queries(session_query, session_dataset, fast_execution=True)
-    db.many_update_queries(ordered_products_query, ordered_products_dataset)
+    db.many_update_queries(ordered_products_query, ordered_products_dataset, fast_execution=True)
 
 
 
