@@ -2,6 +2,22 @@ import PostgresDAO
 import MongodbDAO
 # test
 
+
+def retrieve_from_list(lst: list, index: int):
+    """Try to retrieve an item at a certain index in a list.
+    Check if parameter is actually a list.
+
+    If given list is not actually an list, or given index doesn't exist in it, returns None.
+
+    Args:
+        """
+    if isinstance(lst, list):
+        try:
+            return lst[index]
+        except IndexError:
+            return None #could also perhaps be a pass statement
+    return None
+
 def retrieve_from_dict(dict: dict, key):
     """Tries to retrieve a value from a dictionairy with a certain key, and catches the KeyError if it doesn't exist.
 
@@ -143,7 +159,57 @@ def fill_profiles_and_bu(pg: PostgresDAO.PostgreSQLdb):
     pg.many_update_queries(buid_q, buid_dataset)
 
 
+def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
+    """Fill the session, profile and bu tables in the PostgreSQL db using the profiles and session collections in MongoDB.
 
+    Args:
+        db: the PostgresDAO.postgreSQLdb object to fill."""
+    profile_collection = MongodbDAO.getDocuments("profiles")
+    session_collection = MongodbDAO.getDocuments("sessions")
+
+    session_dataset = []
+    profile_dataset = []
+    buid_dataset = []
+    buid_dict = {}
+
+    for session in session_collection:
+        session_id = retrieve_from_dict(session, "_id")
+        session_segment = retrieve_from_dict(session, "segment")
+        session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"))
+
+        session_tuple = (session_id, session_segment, session_buid)
+
+        session_dataset.append(session_tuple)
+        if not session_buid in buid_dict:#could perhaps remove if-statement and just re-assign None
+            buid_dict[session_buid] = None
+
+    for profile in profile_collection:
+        profile_id = retrieve_from_dict(profile, "_id")
+        profile_buids = retrieve_from_dict(profile, "buids")
+
+        if isinstance(profile_buids, list):
+            for profile_buid in profile_buids:
+                if profile_buid in buid_dict:
+                    buid_dict[profile_buid] = profile_id
+                profile_dataset.append((profile_id,))
+
+    for buid, profile in buid_dict.items():
+        buid_dataset.append((buid, profile))
+
+    profile_query = construct_insert_query("Profiles", ["profile_id"])
+    bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
+    session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
+
+    db.many_update_queries(profile_query, profile_dataset)
+    db.many_update_queries(bu_query, buid_dataset)
+    db.many_update_queries(session_query, session_dataset)
+
+
+print("START")
+fill_sessions_profiles_bu(PostgresDAO.db)
+print("DONE")
+### REMOVED TEMPORARILY FOR TESTING:
+"""
 ### Actual function calls to fill the database
 if __name__ == "__main__":
     print("--START MONGO-TO-PG--", end="\n\n\n")
@@ -170,8 +236,6 @@ if __name__ == "__main__":
 
     #Fill the Sessions table in PostgreSQL
     def session_buid_unpacker(array):
-        """Returns first object in a list.
-        Will write nicer function later"""
         if isinstance(array, list) or isinstance(array, tuple):
             return array[0]
         return None
@@ -184,3 +248,4 @@ if __name__ == "__main__":
                         ["session_id", "segment", "bu_id"],
                         {2: session_buid_unpacker})
     print("The Sessions table has been filled!", end="\n\n")
+"""
