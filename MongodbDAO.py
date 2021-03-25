@@ -1,6 +1,6 @@
 import pymongo
 
-def getMongoDB(mongoConnectString = "mongodb://localhost:27017/", databaseName = 'huwebshop'):
+def getMongoDB(mongoConnectString = "mongodb://localhost:27017/", databaseName = 'huwebshop'): #TODO: Make more modular
     """Functie om te connecten met een mongoDB
     Args:
         mongoConnectString: connect string standaard connection op localhost:27017

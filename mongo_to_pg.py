@@ -143,6 +143,7 @@ def fill_profiles_and_bu(pg: PostgresDAO.PostgreSQLdb):
     pg.many_update_queries(buid_q, buid_dataset)
 
 
+#TODO: Remove dumb var names, replace with proper function calls.
 #refresh DB
 PostgresDAO.db.regenerate_db("DDL1.txt")
 print("DB CLEANED")
