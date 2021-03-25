@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     #Fill the Profiles, Bu and Sessions tables in PostgreSQL
     print("Filling the Profiles, Bu and Sessions tables.")
-    fill_sessions_profiles_bu(PostgresDAO.db)
+    fill_sessions_profiles_bu(PostgresDAO.db, products_in_existance)
     print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
 
 
