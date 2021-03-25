@@ -173,11 +173,13 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     buid_dict = {}
 
     for session in session_collection:
-        session_id = retrieve_from_dict(session, "_id")
-        session_segment = retrieve_from_dict(session, "segment")
+        session_id = str(retrieve_from_dict(session, "_id"))
+        session_segment = str(retrieve_from_dict(session, "segment"))
         session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
         if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
             session_buid = retrieve_from_list(session_buid, 0)
+
+        session_buid = str(session_buid) #FIXME: Find better place to put this
 
         session_tuple = (session_id, session_segment, session_buid)
 
@@ -186,11 +188,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
             buid_dict[session_buid] = None
 
     for profile in profile_collection:
-        profile_id = retrieve_from_dict(profile, "_id")
+        profile_id = str(retrieve_from_dict(profile, "_id"))
         profile_buids = retrieve_from_dict(profile, "buids")
 
         if isinstance(profile_buids, list):
             for profile_buid in profile_buids:
+                profile_id = str(profile_id)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
                 profile_dataset.append((profile_id,))
