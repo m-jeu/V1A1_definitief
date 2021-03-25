@@ -209,9 +209,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
     session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
 
-    db.many_update_queries(profile_query, profile_dataset)
-    db.many_update_queries(bu_query, buid_dataset)
-    db.many_update_queries(session_query, session_dataset)
+    print("Profiles is being filled.")
+    db.many_update_queries(profile_query, profile_dataset, fast_execution=True)
+    print("Bu is being filled.")
+    db.many_update_queries(bu_query, buid_dataset, fast_execution=True)
+    print("Sessions is being filled.")
+    db.many_update_queries(session_query, session_dataset, fast_execution=True)
 
 PostgresDAO.db.regenerate_db("DDL1.txt")
 print("START")
