@@ -30,7 +30,7 @@ def retrieve_from_dict(dct: dict, key):
         if the key exists in the dictionairy, returns the value associated with the key.
         if it doesn't exist, returns None.
         If given anything but a dict, returns None."""
-    if not isinstance(dct, dict):
+    if isinstance(dct, dict):
         try:
             return dct[key]
         except KeyError:
