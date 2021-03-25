@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 
 
 #Vul hier je eigen PostgreSQL credentials in:
@@ -124,7 +125,7 @@ class PostgreSQLdb:
         self._close_connection()
         return output
 
-    def many_update_queries(self, query: str, data_list: list[tuple]):
+    def many_update_queries(self, query: str, data_list: list[tuple], fast_execution: bool = True):
         """Execute a single query that updates the DB with many different values without constantly opening/closing cursors/connections.
 
         Args:
@@ -133,10 +134,15 @@ class PostgreSQLdb:
                 Must contain '%s' in place of parameters to let psycopg2 automatically format them.
                 The values to replace the %s's with must be passed with the parameters parameter.
             data_list:
-                list containing a tuple for every query that has to be excecuted."""
+                list containing a tuple for every query that has to be excecuted.
+            fast_execution:
+                will use psycopg2.extras.execute_batch() instead of psycopg2.executemany() to improve performance if true"""
         self._connect()
         self._summon_cursor()
-        self.cursor.executemany(query, data_list)
+        if fast_execution:
+            psycopg2.extras.execute_batch(self.cursor, query, data_list)
+        else:
+            self.cursor.executemany(query, data_list)
         self._commit_changes()
         self._close_cursor()
         self._close_connection()
