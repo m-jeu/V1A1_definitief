@@ -170,6 +170,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     session_dataset = []
     profile_dataset = []
     buid_dataset = []
+    profile_set = {}
     buid_dict = {}
 
     for session in session_collection:
@@ -196,10 +197,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
                 profile_id = str(profile_id)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
-                profile_dataset.append((profile_id,))
+                profile_set.add(profile_id)
 
     for buid, profile in buid_dict.items():
         buid_dataset.append((buid, profile))
+
+    profile_dataset = [(x,) for x in profile_set]
 
     profile_query = construct_insert_query("Profiles", ["profile_id"])
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
