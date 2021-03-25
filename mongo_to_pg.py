@@ -98,7 +98,7 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
         value_list = []
         for i in range(0, len(mongo_attribute_list)):
             key = mongo_attribute_list[i]
-            unpack_method = retrieve_from_dict(dict, i)
+            unpack_method = retrieve_from_dict(unpack_method_dict, i)
             if type(key) == list:
                 value = retrieve_from_dict_depths_recursively(item, key)
             else:
@@ -143,67 +143,42 @@ def fill_profiles_and_bu(pg: PostgresDAO.PostgreSQLdb):
     pg.many_update_queries(buid_q, buid_dataset)
 
 
-#TODO: Remove dumb var names, replace with proper function calls.
-#refresh DB
-PostgresDAO.db.regenerate_db("DDL1.txt")
-print("DB CLEANED")
 
+### Actual function calls to fill the database
+if __name__ == "__main__":
+    print("--START MONGO-TO-PG--", end="\n\n\n")
 
-fill_profiles_and_bu(PostgresDAO.db)
+    #Regenerate DB
+    print("Regenerating the PostgreSQL database.")
+    PostgresDAO.db.regenerate_db("DDL1.txt")
+    print("PostgreSQL database has been regenerated!", end="\n\n")
 
-#port products
+    #Fill the Profiles and Bu tables in PostgreSQL
+    print("Filling the Profiles and Bu tables.")
+    fill_profiles_and_bu(PostgresDAO.db)
+    print("The Profiles and Bu tables have been filled!", end="\n\n")
 
-# a = mongo collection name
-a = "products"
+    #Fill the products table in PostgreSQL TODO: Add all the missing attributes
+    print("Filling the Products table.")
+    simple_mongo_to_sql("products",
+                        PostgresDAO.db,
+                        "Products",
+                        ["_id", "name", ["price", "selling_price"]],
+                        ["product_id", "product_name", "selling_price"],
+                        reject_if_null_amount=2)
+    print("The Products table has been filled!", end="\n\n")
 
-# b = postgres data base
-b = PostgresDAO.db
+    #Fill the Sessions table in PostgreSQL
+    def session_buid_unpacker(array):
+        """Returns first object in a list.
+        Will write nicer function later"""
+        return array[0]
 
-# c = postgres table name
-c = "Products"
-
-# d = mongo attribute list
-d = ["_id", "name", ["price", "selling_price"]]
-
-# e = postgres attribute list
-e = ["product_id", "product_name", "selling_price"]
-
-# f = unpack_method_dict
-
-# g = reject if null amount
-g = 2
-
-simple_mongo_to_sql(a, b, c, d, e, reject_if_null_amount=g)
-
-
-print("PRODUCTS PORTED")
-#port session
-
-def session_buid_unpacker(array):
-    """Returns first object in a list.
-    Will write nicer function later"""
-    return array[0]
-
-# a = mongo collection name
-a = "sessions"
-
-# b = postgres data base
-b = PostgresDAO.db
-
-# c = postgres table name
-c = "Sessions"
-
-# d = mongo attribute list
-d = ["_id", "segment", "buid"]
-
-# e = postgres attribute list
-e = ["session_id", "segment", "bu_id"]
-
-# f = unpack_method_dict
-f = {2: session_buid_unpacker}
-
-# g = reject if null amount
-g = 1
-
-simple_mongo_to_sql(a, b, c, d, e, f)
-print("SESSIONS PORTED")
+    print("Filling the Sessions table.")
+    simple_mongo_to_sql("sessions",
+                        PostgresDAO.db,
+                        "Sessions",
+                        ["_id", "segment", "buid"],
+                        ["session_id", "segment", "bu_id"],
+                        {2: session_buid_unpacker})
+    print("The Sessions table has been filled!", end="\n\n")
