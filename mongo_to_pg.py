@@ -175,7 +175,9 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     for session in session_collection:
         session_id = retrieve_from_dict(session, "_id")
         session_segment = retrieve_from_dict(session, "segment")
-        session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"))
+        session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
+        if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
+            session_buid = retrieve_from_list(session_buid, 0)
 
         session_tuple = (session_id, session_segment, session_buid)
 
