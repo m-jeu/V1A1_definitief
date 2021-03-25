@@ -1,7 +1,6 @@
 DROP TABLE IF EXISTS Ordered_products;
 DROP TABLE IF EXISTS Sessions;
 DROP TABLE IF EXISTS Products;
-DROP TABLE IF EXISTS Categories;
 DROP TABLE IF EXISTS Bu;
 DROP TABLE IF EXISTS Profiles;
 
@@ -28,27 +27,16 @@ CREATE TABLE Sessions
 	FOREIGN KEY(bu_id) REFERENCES Bu(bu_id)
 );
 
-CREATE TABLE Categories
-(
-	category_id INT NOT NULL,
-	category_name VARCHAR(255) NOT NULL,
-	PRIMARY KEY(category_id)
-);
-
 CREATE TABLE Products
 (
 	product_id VARCHAR(128) NOT NULL,
 	product_name VARCHAR(255) NOT NULL,
 	selling_price INT,
-	category INT,
-	sub_category INT,
-	sub_sub_category INT,
-	sub_sub_sub_category INT,
-	PRIMARY KEY(product_id),
-	FOREIGN KEY(category) REFERENCES Categories(category_id),
-	FOREIGN KEY(sub_category) REFERENCES Categories(category_id),
-	FOREIGN KEY(sub_sub_category) REFERENCES Categories(category_id),
-	FOREIGN KEY(sub_sub_sub_category) REFERENCES Categories(category_id)
+	category VARCHAR,
+	sub_category VARCHAR,
+	sub_sub_category VARCHAR,
+	sub_sub_sub_category VARCHAR,
+	PRIMARY KEY(product_id)
 );
 CREATE TABLE Ordered_products
 (
