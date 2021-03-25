@@ -127,36 +127,7 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
         if not (None in value_list[0:reject_if_null_amount]):
             data_list.append(tuple(value_list))
     q = construct_insert_query(postgres_table_name, postgres_attribute_list)
-    postgres_db.many_update_queries(q, data_list)
-
-
-def fill_profiles_and_bu(pg: PostgresDAO.PostgreSQLdb):
-    """Function to specifically fill the Profiles and Bu tables in PostGreSQL from the MongoDB collection profiles.
-
-    Not very modular, still needs improvement.
-
-    Args:
-        pg: the PostgresDAO db to fill."""
-    collection = MongodbDAO.getDocuments("profiles")
-    profile_dataset = []
-    buid_dataset = []
-
-    known_buid = set()
-
-    for profile in collection:
-        id = str(retrieve_from_dict(profile, "_id"))
-        profile_dataset.append((id,))
-        buids = retrieve_from_dict(profile, "buids")
-        if buids != None:
-            for buid in buids:
-                buid = str(buid)
-                if not (buid in known_buid):
-                    known_buid.add(buid)
-                    buid_dataset.append((buid, id))
-    profile_q = construct_insert_query("Profiles", ["profile_id"])
-    buid_q = construct_insert_query("Bu", ["bu_id", "profile_id"])
-    pg.many_update_queries(profile_q, profile_dataset)
-    pg.many_update_queries(buid_q, buid_dataset)
+    postgres_db.many_update_queries(q, data_list, fast_execution=True)
 
 
 def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
@@ -209,19 +180,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
     session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
 
-    print("Profiles is being filled.")
     db.many_update_queries(profile_query, profile_dataset, fast_execution=True)
-    print("Bu is being filled.")
     db.many_update_queries(bu_query, buid_dataset, fast_execution=True)
-    print("Sessions is being filled.")
     db.many_update_queries(session_query, session_dataset, fast_execution=True)
 
-PostgresDAO.db.regenerate_db("DDL1.txt")
-print("START")
-fill_sessions_profiles_bu(PostgresDAO.db)
-print("DONE")
-### REMOVED TEMPORARILY FOR TESTING:
-"""
+
+
 ### Actual function calls to fill the database
 if __name__ == "__main__":
     print("--START MONGO-TO-PG--", end="\n\n\n")
@@ -231,10 +195,10 @@ if __name__ == "__main__":
     PostgresDAO.db.regenerate_db("DDL1.txt")
     print("PostgreSQL database has been regenerated!", end="\n\n")
 
-    #Fill the Profiles and Bu tables in PostgreSQL
-    print("Filling the Profiles and Bu tables.")
-    fill_profiles_and_bu(PostgresDAO.db)
-    print("The Profiles and Bu tables have been filled!", end="\n\n")
+    #Fill the Profiles, Bu and Sessions tables in PostgreSQL
+    print("Filling the Profiles, Bu and Sessions tables.")
+    fill_sessions_profiles_bu(PostgresDAO.db)
+    print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
 
     #Fill the products table in PostgreSQL TODO: Add all the missing attributes
     print("Filling the Products table.")
@@ -245,19 +209,3 @@ if __name__ == "__main__":
                         ["product_id", "product_name", "selling_price"],
                         reject_if_null_amount=2)
     print("The Products table has been filled!", end="\n\n")
-
-    #Fill the Sessions table in PostgreSQL
-    def session_buid_unpacker(array):
-        if isinstance(array, list) or isinstance(array, tuple):
-            return array[0]
-        return None
-
-    print("Filling the Sessions table.")
-    simple_mongo_to_sql("sessions",
-                        PostgresDAO.db,
-                        "Sessions",
-                        ["_id", "segment", "buid"],
-                        ["session_id", "segment", "bu_id"],
-                        {2: session_buid_unpacker})
-    print("The Sessions table has been filled!", end="\n\n")
-"""
