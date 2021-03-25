@@ -136,7 +136,8 @@ class PostgreSQLdb:
             data_list:
                 list containing a tuple for every query that has to be excecuted.
             fast_execution:
-                will use psycopg2.extras.execute_batch() instead of psycopg2.executemany() to improve performance if true"""
+                will use psycopg2.extras.execute_batch() instead of psycopg2.executemany() to improve performance if true.
+                Optional parameter to allow for backwards compatibility."""
         self._connect()
         self._summon_cursor()
         if fast_execution:
