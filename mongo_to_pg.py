@@ -197,7 +197,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
                 profile_buid = str(profile_buid)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
-                    
+
         profile_set.add(profile_id)
 
     for buid, profile in buid_dict.items():
@@ -213,7 +213,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb):
     db.many_update_queries(bu_query, buid_dataset)
     db.many_update_queries(session_query, session_dataset)
 
-
+PostgresDAO.db.regenerate_db("DDL1.txt")
 print("START")
 fill_sessions_profiles_bu(PostgresDAO.db)
 print("DONE")
