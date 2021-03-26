@@ -1,5 +1,5 @@
-import query_functions
-from .. import PostgresDAO
+
+from ..PostgresDAO import *
 
 def fill_simple_recommendation(db):
     """Function to make simple recommendation based on the most popular products"""
