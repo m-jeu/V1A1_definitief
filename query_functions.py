@@ -1,6 +1,6 @@
 # import from parent directory with ..
-from .. import PostgresDAO
 
+# also executes query
 def create_rec_table_query(db, table_name, attributes_datatypes):
     """Function to construct and execute a query for table creation where the product recommendations will be stored
     args:
@@ -17,14 +17,12 @@ def create_rec_table_query(db, table_name, attributes_datatypes):
     pro2 VARCHAR,
     pro3 VARCHAR,
     pro4 VARCHAR,
-    FOREIGN KEY(pro1) REFERENCES products(id),
-    FOREIGN KEY(pro2) REFERENCES products(id),
-    FOREIGN KEY(pro3) REFERENCES products(id),
-    FOREIGN KEY(pro4) REFERENCES products(id)
+    FOREIGN KEY(pro1) REFERENCES products(product_id),
+    FOREIGN KEY(pro2) REFERENCES products(product_id),
+    FOREIGN KEY(pro3) REFERENCES products(product_id),
+    FOREIGN KEY(pro4) REFERENCES products(product_id)
     );"""
     db.query(table_query, commit_changes=True)
-
-
+# also executes query
 def most_popular_products_query(db):
-    most_popular_products_query = "SELECT prodid from profiles_previously_viewed group by prodid order by count(prodid) DESC limit 4"
-    return db.query(most_popular_products_query, commit_changes=True)
+    return db.query("SELECT product_id from ordered_products group by product_id order by count(product_id) DESC limit 4", expect_return=True)
