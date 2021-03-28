@@ -1,5 +1,5 @@
-import PostgresDAO
-import query_functions
+from V1A1_definitief.database import PostgresDAO
+from V1A1_definitief.recommendation_rules import query_functions
 
 def fill_simple_recommendation(db):
     """Function to make simple recommendation based on the most popular products"""
@@ -12,4 +12,5 @@ def fill_simple_recommendation(db):
         f"INSERT INTO simple_recommendation VALUES %s", (recommendations, ), commit_changes=True)
 
 fill_simple_recommendation(PostgresDAO.db)
+
 

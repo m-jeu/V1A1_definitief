@@ -1,5 +1,3 @@
-# import from parent directory with ..
-
 # also executes query
 def create_rec_table_query(db, table_name, attributes_datatypes):
     """Function to construct and execute a query for table creation where the product recommendations will be stored

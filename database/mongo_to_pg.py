@@ -1,5 +1,5 @@
-import PostgresDAO
-import MongodbDAO
+from V1A1_definitief.database import PostgresDAO
+from V1A1_definitief.database import MongodbDAO
 # test
 
 
