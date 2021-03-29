@@ -151,6 +151,11 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
 def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: set):
     """Fill the session, profile and bu tables in the PostgreSQL db using the profiles and session collections in MongoDB.
 
+    Not very modular, but considering the specific nature of (almost) every PostgreSQL table, a specific function is
+    probably the most pragmatic way to go about it.
+
+
+
     Args:
         db: the PostgresDAO.postgreSQLdb object to fill."""
     profile_collection = MongodbDAO.getDocuments("profiles")
@@ -160,10 +165,11 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     profile_dataset = []
     buid_dataset = []
     ordered_products_dataset = []
-    profile_set = set()
-    buid_dict = {}
+    profile_set = set() #keeps track of all the profile_ids that exist in the profiles collection
+    buid_dict = {} #keeps track of all the buids that exist in the session collection dataset (as keys) and what profile they're associated with (if any) as values.
 
     for session in session_collection:
+        #get session information and add to session dataset
         session_id = retrieve_from_dict(session, "_id")
         if session_id is None: #TODO: Check if this should be removed
             continue
@@ -172,15 +178,15 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
         if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
             session_buid = retrieve_from_list(session_buid, 0)
-
         session_buid = str(session_buid) #FIXME: Find better place to put this
-
         session_tuple = (session_id, session_segment, session_buid)
-
         session_dataset.append(session_tuple)
-        if not session_buid in buid_dict:#could perhaps remove if-statement and just re-assign None
+
+        #add session_buid to buid_dict
+        if not session_buid in buid_dict: #FIXME: could perhaps remove if-statement and just re-assign None
             buid_dict[session_buid] = None
 
+        #add products that have been ordered to the ordered_products_dataset
         session_order = retrieve_from_dict_depths_recursively(session, ["order", "products"])
         if session_order != None:
             temp_duplicate_tracker = set() #FIXME: Should also be removed when accounting for quantity
@@ -191,27 +197,32 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
                     temp_duplicate_tracker.add(product_id)
 
     for profile in profile_collection:
+        #get profile information and add to profile_set
         profile_id = str(retrieve_from_dict(profile, "_id"))
         profile_buids = retrieve_from_dict(profile, "buids")
+        profile_set.add(profile_id)
 
+        #assign profile_id associated buid in buid_Dict
         if isinstance(profile_buids, list):
             for profile_buid in profile_buids:
                 profile_buid = str(profile_buid)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
 
-        profile_set.add(profile_id)
-
+    #fill buid_dataset from buid_dict
     for buid, profile in buid_dict.items():
         buid_dataset.append((buid, profile))
 
+    #fill profile_dataset from profile_set
     profile_dataset = [(x,) for x in profile_set]
 
+    #construct insert queries for PostgreSQL insertions
     profile_query = construct_insert_query("Profiles", ["profile_id"])
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
     session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
     ordered_products_query = construct_insert_query("Ordered_products", ["session_id", "product_id", "quantity"])
 
+    #insert into PostgreSQL
     db.many_update_queries(profile_query, profile_dataset, fast_execution=True)
     db.many_update_queries(bu_query, buid_dataset, fast_execution=True)
     db.many_update_queries(session_query, session_dataset, fast_execution=True)
@@ -243,5 +254,3 @@ if __name__ == "__main__":
     print("Filling the Profiles, Bu and Sessions tables.")
     fill_sessions_profiles_bu(PostgresDAO.db, products_in_existance)
     print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
-
-
