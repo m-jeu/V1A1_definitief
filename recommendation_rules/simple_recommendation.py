@@ -11,6 +11,6 @@ def fill_simple_recommendation(db):
     db.query(
         f"INSERT INTO simple_recommendation VALUES %s", (recommendations, ), commit_changes=True)
 
-fill_simple_recommendation(PostgresDAO.db)
 
-
+if __name__ == "__main__":
+    fill_simple_recommendation(PostgresDAO.db)
