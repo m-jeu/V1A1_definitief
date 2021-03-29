@@ -7,14 +7,17 @@ def getMongoDB(mongoConnectString = "mongodb://localhost:27017/", databaseName =
         databaseName: naam van de database standaard huwebshop
     Returns connectie met mongoDB"""
     myclient = pymongo.MongoClient(mongoConnectString)
-    return myclient[databaseName]
+    return myclient
 
-def getCollection(collectionName):
+def getCollection(collectionName, database_name = "huwebshop"):
     """Functie om een collectie uit de mongoDB op te halen
     Args:
         collectionName: Naam van de op te halen collectie
     Returns de collectie als object"""
-    return getMongoDB().get_collection(collectionName)
+    mongo_client = getMongoDB()
+    result = mongo_client[database_name].get_collection(collectionName)
+    mongo_client.close()
+    return result
 
 def getDocuments(collectionName, filter = {}):
     """Functie om een collectie uit de mongoDB op te halen met een filter op de elementen
