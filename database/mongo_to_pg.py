@@ -172,7 +172,8 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         session_dataset.append(session_tuple)
 
         #add session_buid to buid_dict
-        buid_dict[session_buid] = None
+        if not session_buid is None:
+            buid_dict[session_buid] = None
 
         #add products that have been ordered to ordered_products_dict
         session_order = unpack(session, ["order", "products"])
@@ -195,7 +196,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         if isinstance(profile_buids, list):
             for profile_buid in profile_buids:
                 profile_buid = string_or_none(profile_buid)
-                if profile_buid in buid_dict:
+                if profile_buid in buid_dict and not profile_id is None:
                     buid_dict[profile_buid] = profile_id
 
     #fill buid_dataset from buid_dict
