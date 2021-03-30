@@ -52,6 +52,19 @@ def construct_insert_query(table_name: str, var_names: list[str]) -> str:
     return q
 
 
+def string_or_none(data) -> str or None:
+    """Convert a variable to a string, if it's not None.
+
+    Args:
+        data: the variable to convert to a string.
+
+    Returns:
+        the converted string, or None if data was already None."""
+    if not data is None:
+        return str(data)
+    return None
+
+
 def simple_mongo_to_sql(mongo_collection_name: str,
                         postgres_db: PostgresDAO.PostgreSQLdb,
                         postgres_table_name: str,
@@ -150,9 +163,9 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         if isinstance(session_buid, list):
             session_buid = unpack(session_buid, [0])
 
-        session_id = str(session_id)
-        session_segment = str(session_segment)
-        session_buid = str(session_buid)
+        session_id = string_or_none(session_id)
+        session_segment = string_or_none(session_segment)
+        session_buid = string_or_none(session_buid)
 
         session_tuple = (session_id, session_segment, session_buid)
         session_dataset.append(session_tuple)
@@ -165,21 +178,22 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         if session_order != None:
             temp_duplicate_tracker = set() #FIXME: Should also be removed when accounting for quantity
             for product in session_order:
-                product_id = str(product.get("id"))
+                product_id = product.get("id")
+                product_id = string_or_none(product_id)
                 if product_id in valid_product_ids and not product_id in temp_duplicate_tracker:
                     ordered_products_dataset.append((session_id, product_id, 1)) #FIXME: Account for quantity.
                     temp_duplicate_tracker.add(product_id)
 
-    for profile in profile_collection: #FIXME: Verify wether None gets entered as string into DB
+    for profile in profile_collection:
         #get profile information and add to profile_set
-        profile_id = str(profile.get("_id"))
+        profile_id = string_or_none(profile.get("_id"))
         profile_buids = profile.get("buids")
         profile_set.add(profile_id)
 
         #assign profile_id associated buid in buid_Dict
         if isinstance(profile_buids, list):
             for profile_buid in profile_buids:
-                profile_buid = str(profile_buid)
+                profile_buid = string_or_none(profile_buid)
                 if profile_buid in buid_dict:
                     buid_dict[profile_buid] = profile_id
 
