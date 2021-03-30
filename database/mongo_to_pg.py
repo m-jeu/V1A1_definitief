@@ -1,6 +1,6 @@
 from V1A1_definitief.database import PostgresDAO
 from V1A1_definitief.database import MongodbDAO
-# test
+import datetime
 
 
 def unpack(input, keys: list):
@@ -160,6 +160,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
             continue
         session_segment = session.get("segment")
         session_buid = unpack(session, ["buid", 0])
+        session_end = session.get("session_end")
 
         if isinstance(session_buid, list):
             session_buid = unpack(session_buid, [0])
@@ -168,7 +169,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         session_segment = string_or_none(session_segment)
         session_buid = string_or_none(session_buid)
 
-        session_tuple = (session_id, session_segment, session_buid)
+        session_tuple = (session_id, session_segment, session_buid, session_end)
         session_dataset.append(session_tuple)
 
         #add session_buid to buid_dict
@@ -213,7 +214,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     #construct insert queries for PostgreSQL insertions
     profile_query = construct_insert_query("Profiles", ["profile_id"])
     bu_query = construct_insert_query("Bu", ["bu_id", "profile_id"])
-    session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id"])
+    session_query = construct_insert_query("Sessions", ["session_id", "segment", "bu_id", "session_end"])
     ordered_products_query = construct_insert_query("Ordered_products", ["session_id", "product_id", "quantity"])
 
     #insert into PostgreSQL
