@@ -1,5 +1,6 @@
 import pymongo
 
+
 def getMongoDB(mongoConnectString = "mongodb://localhost:27017/", databaseName = 'huwebshop'): #TODO: Make more modular
     """Functie om te connecten met een mongoDB
     Args:
@@ -8,6 +9,7 @@ def getMongoDB(mongoConnectString = "mongodb://localhost:27017/", databaseName =
     Returns connectie met mongoDB"""
     myclient = pymongo.MongoClient(mongoConnectString)
     return myclient
+
 
 def getCollection(collectionName, database_name = "huwebshop"):
     """Functie om een collectie uit de mongoDB op te halen
@@ -18,6 +20,7 @@ def getCollection(collectionName, database_name = "huwebshop"):
     result = mongo_client[database_name].get_collection(collectionName)
     mongo_client.close()
     return result
+
 
 def getDocuments(collectionName, filter = {}):
     """Functie om een collectie uit de mongoDB op te halen met een filter op de elementen
