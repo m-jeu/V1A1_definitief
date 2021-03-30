@@ -149,6 +149,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     profile_dataset = []
     buid_dataset = []
     ordered_products_dataset = []
+    ordered_products_dict = {} #keeps track of all the orders with (session_id, product_id) as key and quantity as value
     profile_set = set() #keeps track of all the profile_ids that exist in the profiles collection
     buid_dict = {} #keeps track of all the buids that exist in the session collection dataset (as keys) and what profile they're associated with (if any) as values.
 
@@ -173,16 +174,16 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
         #add session_buid to buid_dict
         buid_dict[session_buid] = None
 
-        #add products that have been ordered to the ordered_products_dataset
+        #add products that have been ordered to ordered_products_dict
         session_order = unpack(session, ["order", "products"])
         if session_order != None:
-            temp_duplicate_tracker = set() #FIXME: Should also be removed when accounting for quantity
             for product in session_order:
-                product_id = product.get("id")
-                product_id = string_or_none(product_id)
-                if product_id in valid_product_ids and not product_id in temp_duplicate_tracker:
-                    ordered_products_dataset.append((session_id, product_id, 1)) #FIXME: Account for quantity.
-                    temp_duplicate_tracker.add(product_id)
+                product_id = string_or_none(product.get("id"))
+                if product_id in valid_product_ids:
+                    if (session_id, product_id) in ordered_products_dict:
+                        ordered_products_dict[(session_id, product_id)] += 1
+                    else:
+                        ordered_products_dict[(session_id, product_id)] = 1
 
     for profile in profile_collection:
         #get profile information and add to profile_set
@@ -203,6 +204,10 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
     #fill profile_dataset from profile_set
     profile_dataset = [(x,) for x in profile_set]
+
+    #fill ordered_products_dataset from ordered_products_dict
+    for k, v in ordered_products_dict.items():
+        ordered_products_dataset += (k[0], k[1], v)
 
     #construct insert queries for PostgreSQL insertions
     profile_query = construct_insert_query("Profiles", ["profile_id"])
