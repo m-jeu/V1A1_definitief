@@ -48,7 +48,7 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
 propositional_logic_recommendation(PostgresDAO.db,
-                      'and_or_recommendation',
+                      'propositional_logic_recommendation',
                      """(product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20))""",
                       ['product_id', 'sub_sub_category', 'selling_price', 'selling_price'])
 
