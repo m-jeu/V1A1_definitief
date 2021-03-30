@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS propositional_logic_recommendation;
 DROP TABLE IF EXISTS simple_recommendation;
 DROP TABLE IF EXISTS Ordered_products;
 DROP TABLE IF EXISTS Sessions;
