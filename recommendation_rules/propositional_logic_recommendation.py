@@ -19,7 +19,7 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     query_functions.create_rec_table_query(db, table, "prod_ids VARCHAR,")
     # weird but working way to connect with psql psql.read_sql_query requires connection
     # select all from products # todo implement way to FROM profiles with param
-    all_products = DataFrame(psql.read_sql_query("SELECT * FROM products", db._connect()))
+    all_products = psql.read_sql_query("SELECT * FROM products", db._connect())
     # create pandas df
     df = DataFrame(all_products)
     # because we queried to psql with pandas not with psycopg2 we can set the column names from the keys, psycopy2 doesn't return keys.
@@ -47,10 +47,11 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     # fill the recommendation table with all the recommendations
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
-propositional_logic_recommendation(PostgresDAO.db,
-                      'propositional_logic_recommendation',
-                     """(product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20))""",
-                      ['product_id', 'sub_sub_category', 'selling_price', 'selling_price'])
+if __name__ == "__main__":
+    propositional_logic_recommendation(PostgresDAO.db,
+                                       'propositional_logic_recommendation',
+                                       """(product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20))""",
+                                       ['product_id', 'sub_sub_category', 'selling_price', 'selling_price'])
 
 
 
