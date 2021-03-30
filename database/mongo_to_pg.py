@@ -3,64 +3,35 @@ from V1A1_definitief.database import MongodbDAO
 # test
 
 
-def retrieve_from_list(lst: list, index: int):
-    """Try to retrieve an item at a certain index in a list.
-    Check if parameter is actually a list.
-
-    If given list is not actually an list, or given index doesn't exist in it, returns None.
+def unpack(input, keys: list):
+    """Unpack (several layers) of either dictionairies, tuples or lists (recursively).
+    According to a set of keys or indexes.
 
     Args:
-        """
-    if isinstance(lst, list):
-        try:
-            return lst[index]
-        except IndexError:
-            return None #could also perhaps be a pass statement
-    return None
-
-def retrieve_from_dict(dct: dict, key):
-    """Tries to retrieve a value from a dictionairy with a certain key, and catches the KeyError if it doesn't exist.
-    Also checks wether it is actually given a dictionairy.
-
-    Args:
-        dict: the dictionairy to retrieve the value from.
-        key: the key associated with the desired data.
+        input: the list, dict or tuple to unpack.
+        keys:
+            a list containing the indexes or keys to unpack, starting at the top layer, going down.
+            a dict-containing-list-containing-dict structure could have a keys parameter like:
+                ["Users", 5, "Adress"]
 
     Returns:
-        if the key exists in the dictionairy, returns the value associated with the key.
-        if it doesn't exist, returns None.
-        If given anything but a dict, returns None."""
-    if isinstance(dct, dict):
-        try:
-            return dct[key]
-        except KeyError:
-            return None
-    return None #readability is key
-
-
-def retrieve_from_dict_depths_recursively(input: dict, keys: list):
-    """Function to return value associated with certain key in dictionairy.
-    Also able to recursively search any depth of dictionairiy-in-dictionairy construction.
-
-    Will catch KeyError if given a key that doesn't exist, and return None.
-    Will also return None if given anything other then an iterable.
-
-    Args:
-        input: the dictionairy to access.
-        keys: list containing keys, starting from the top level dict going down. One key is also valid.
-
-    Returns:
-        Retrieved value if every key in keys was valid.
+        The unpacked value if all keys/indexes were valid.
         None if not.
     """
-    if type(input) != dict:
-        return None
-    if len(keys) == 1:
-        return retrieve_from_dict(input, keys[0])
-    try:
-        return retrieve_from_dict_depths_recursively(input[keys[0]], keys[1:])
-    except KeyError:
-        return None
+    if isinstance(input, dict):
+        if len(keys) == 1:
+            return input.get(keys[0])
+        else:
+            return unpack(input.get(keys[0]), keys[1:])
+    elif isinstance(input, list) or isinstance(input, tuple):
+        try:
+            value = input[keys[0]]
+        except IndexError:
+            return None
+        if len(keys) != 1:
+            value = unpack(value, keys[1:])
+        return value
+    return None
 
 
 def construct_insert_query(table_name: str, var_names: list[str]) -> str:
@@ -81,7 +52,7 @@ def construct_insert_query(table_name: str, var_names: list[str]) -> str:
     return q
 
 
-def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when computer is not dying
+def simple_mongo_to_sql(mongo_collection_name: str,
                         postgres_db: PostgresDAO.PostgreSQLdb,
                         postgres_table_name: str,
                         mongo_attribute_list: list[str or list[str]],
@@ -128,11 +99,11 @@ def simple_mongo_to_sql(mongo_collection_name: str, #TODO: write docstring when 
         value_list = []
         for i in range(0, len(mongo_attribute_list)):
             key = mongo_attribute_list[i]
-            unpack_method = retrieve_from_dict(unpack_method_dict, i)
+            unpack_method = unpack_method_dict.get(i)
             if type(key) == list:
-                value = retrieve_from_dict_depths_recursively(item, key)
+                value = unpack(item, key)
             else:
-                value = retrieve_from_dict(item, key)
+                value = item.get(key)
             if unpack_method != None:
                 value = unpack_method(value)
             if not(isinstance(value, str) or isinstance(value, int) or isinstance(value, float) or value is None):#because pymongo keeps giving us wonky datatypes. TODO: Consider always using str() without checking for type
@@ -170,14 +141,14 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
     for session in session_collection:
         #get session information and add to session dataset
-        session_id = retrieve_from_dict(session, "_id")
+        session_id = session.get("_id")
         if session_id is None: #TODO: Check if this should be removed
             continue
         session_id = str(session_id)
-        session_segment = str(retrieve_from_dict(session, "segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
-        session_buid = retrieve_from_list(retrieve_from_dict(session, "buid"), 0)
+        session_segment = str(session.get("segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
+        session_buid = unpack(session, ["buid", 0])
         if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
-            session_buid = retrieve_from_list(session_buid, 0)
+            session_buid = unpack(session_buid, [0])
         session_buid = str(session_buid) #FIXME: Find better place to put this
         session_tuple = (session_id, session_segment, session_buid)
         session_dataset.append(session_tuple)
@@ -187,19 +158,19 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
             buid_dict[session_buid] = None
 
         #add products that have been ordered to the ordered_products_dataset
-        session_order = retrieve_from_dict_depths_recursively(session, ["order", "products"])
+        session_order = unpack(session, ["order", "products"])
         if session_order != None:
             temp_duplicate_tracker = set() #FIXME: Should also be removed when accounting for quantity
             for product in session_order:
-                product_id = str(retrieve_from_dict(product, "id"))
+                product_id = str(product.get("id"))
                 if product_id in valid_product_ids and not product_id in temp_duplicate_tracker:
                     ordered_products_dataset.append((session_id, product_id, 1)) #FIXME: Account for quantity.
                     temp_duplicate_tracker.add(product_id)
 
     for profile in profile_collection:
         #get profile information and add to profile_set
-        profile_id = str(retrieve_from_dict(profile, "_id"))
-        profile_buids = retrieve_from_dict(profile, "buids")
+        profile_id = str(profile.get("_id"))
+        profile_buids = profile.get("buids")
         profile_set.add(profile_id)
 
         #assign profile_id associated buid in buid_Dict
