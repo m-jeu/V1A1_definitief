@@ -4,7 +4,7 @@ from V1A1_definitief.database import PostgresDAO
 from V1A1_definitief.recommendation_rules import query_functions
 
 def propositional_logic_recommendation(db, table, pandas_query, query_attributes):
-    """Function to make a table for a and_or_recommendation (similair) and fill them based on a given query
+    """Function to make a table for an and_or_recommendation (similair) and fill them based on a given query
     ex query: product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20)
     will fill the table with products that are in the same sub_sub_category and the price is between 80 & 120 % as current product
     args:
@@ -12,15 +12,14 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
         table: tablename where the recommendation will be stored. ~~ recommendation name
         pandas_query: the filter query including %s formats where the values of the current product must be formatted
         query_attributes: the attributes needed to format in the pandas query
-    ex pandasquery: (product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20)
-    ex query_ attributes: 'product_id, sub_sub_category, selling_price, selling_price'
+    ex pandas_query: (product_id != "%s" and sub_sub_category == "%s" and (selling_price > %s*0.80 and selling_price < %s *1.20)
+    ex query_attributes: 'product_id, sub_sub_category, selling_price, selling_price'
     """
     # create recommendation table in psql
     query_functions.create_rec_table_query(db, table, "prod_ids VARCHAR,")
     # weird but working way to connect with psql psql.read_sql_query requires connection
-    db._connect()
     # select all from products # todo implement way to FROM profiles with param
-    all_products = DataFrame(psql.read_sql_query("SELECT * FROM products", db.connection))
+    all_products = DataFrame(psql.read_sql_query("SELECT * FROM products", db._connect()))
     # create pandas df
     df = DataFrame(all_products)
     # because we queried to psql with pandas not with psycopg2 we can set the column names from the keys, psycopy2 doesn't return keys.
