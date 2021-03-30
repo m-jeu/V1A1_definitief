@@ -208,7 +208,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
     #fill ordered_products_dataset from ordered_products_dict
     for k, v in ordered_products_dict.items():
-        ordered_products_dataset += (k[0], k[1], v)
+        ordered_products_dataset.append((k[0], k[1], v))
 
     #construct insert queries for PostgreSQL insertions
     profile_query = construct_insert_query("Profiles", ["profile_id"])
