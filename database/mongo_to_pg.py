@@ -142,20 +142,23 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
     for session in session_collection:
         #get session information and add to session dataset
         session_id = session.get("_id")
-        if session_id is None: #TODO: Check if this should be removed
+        if session_id is None:
             continue
-        session_id = str(session_id)
-        session_segment = str(session.get("segment")) #TODO: Check wether this causes DB to be filled with 'None' as string
+        session_segment = session.get("segment")
         session_buid = unpack(session, ["buid", 0])
-        if isinstance(session_buid, list): #FIXME: Should be handeled by retrieve_from_list() func.
+
+        if isinstance(session_buid, list):
             session_buid = unpack(session_buid, [0])
-        session_buid = str(session_buid) #FIXME: Find better place to put this
+
+        session_id = str(session_id)
+        session_segment = str(session_segment)
+        session_buid = str(session_buid)
+
         session_tuple = (session_id, session_segment, session_buid)
         session_dataset.append(session_tuple)
 
         #add session_buid to buid_dict
-        if not session_buid in buid_dict: #FIXME: could perhaps remove if-statement and just re-assign None
-            buid_dict[session_buid] = None
+        buid_dict[session_buid] = None
 
         #add products that have been ordered to the ordered_products_dataset
         session_order = unpack(session, ["order", "products"])
@@ -167,7 +170,7 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
                     ordered_products_dataset.append((session_id, product_id, 1)) #FIXME: Account for quantity.
                     temp_duplicate_tracker.add(product_id)
 
-    for profile in profile_collection:
+    for profile in profile_collection: #FIXME: Verify wether None gets entered as string into DB
         #get profile information and add to profile_set
         profile_id = str(profile.get("_id"))
         profile_buids = profile.get("buids")
