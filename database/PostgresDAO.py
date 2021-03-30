@@ -43,7 +43,10 @@ class PostgreSQLdb:
 
     def _connect(self):
         """Connects to the database.
-        Assings a connection object to self.connection."""
+        Assings a connection object to self.connection.
+
+        Returns:
+            The psycopg2 connection object."""
         self.connection = psycopg2.connect(
             host = self.host,
             database = self.database,
@@ -51,11 +54,16 @@ class PostgreSQLdb:
             password = self.password,
             port = self.port
         )
+        return self.connection
 
     def _summon_cursor(self):
         """Creates a cursor within the database.
-        Assigns a cursor object to self.cursor."""
+        Assigns a cursor object to self.cursor.
+
+        Returns:
+            The psycopg2 cursor object."""
         self.cursor = self.connection.cursor()
+        return self.cursor
 
     def _close_connection(self):
         """Closes the connection with the database.
