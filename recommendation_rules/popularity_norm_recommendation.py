@@ -7,6 +7,7 @@ WEEKINSECONDS = 7*24*60*60
 TODAY = PostgresDAO.db.query("SELECT sessions.session_end FROM sessions order by session_end DESC LIMIT 1;", expect_return=True)[0][0]
 #TODAY -= datetime.timedelta(days=60)
 
+#TODO: write documentation
 
 def score_multiplier(x: int, sensitivity: float = 1.0, upper_bound: float = 3.0) -> float:
     """A multiplier to cancel out the disproportional relative increases in sales
@@ -67,6 +68,9 @@ class Product:
     def __repr__(self):
         return self.__str__()
 
+    def __gt__(self, product2):
+        return self.score > product2.score
+
     @staticmethod
     def get_from_pg(db: PostgresDAO.PostgreSQLdb):
         query = """SELECT Ordered_products.product_id, Ordered_products.quantity, Sessions.session_end
@@ -74,9 +78,28 @@ class Product:
             INNER JOIN Ordered_products ON Sessions.session_id = Ordered_products.session_id
             ;"""
 
-        order_dataset = PostgresDAO.db.query(query, expect_return=True)
+        order_dataset = db.query(query, expect_return=True)
 
         for result in order_dataset:
             if not result[0] in Product.tracker:
                 Product(result[0], TODAY)
             Product.tracker[result[0]].add_order(result)
+
+class Top:
+    def __init__(self, length: int):
+        self.length = length
+        self.data = []
+
+    def insert(self, object):
+        if self.data == []:
+            self.data.append(object)
+        else:
+            for i in range(len(self.data) - 1, -2, -1):
+                if i == -1:
+                    self.data.insert(0, object)
+                elif not object > self.data[i]:
+                    self.data.insert(i + 1, object)
+                    break
+        if len(self.data) > self.length:
+            self.data.pop()#TODO: Rewrite so object doesn't get added at index over self.length - 1 at all instead of popping it
+
