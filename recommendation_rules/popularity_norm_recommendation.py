@@ -85,6 +85,11 @@ class Product:
                 Product(result[0], TODAY)
             Product.tracker[result[0]].add_order(result)
 
+    @staticmethod
+    def score_all():
+        for product in Product.tracker.values():
+            product.score()
+
 class Top:
     def __init__(self, length: int):
         self.length = length
