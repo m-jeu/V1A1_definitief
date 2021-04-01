@@ -55,7 +55,6 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
         # insert into all_recommendations
         all_recommendations.append((recommendations, ))
     # fill the recommendation table with all the recommendations
-    db._close_connection()
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
 if __name__ == "__main__":
