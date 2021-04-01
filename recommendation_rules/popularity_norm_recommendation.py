@@ -4,8 +4,16 @@ import datetime
 
 
 WEEKINSECONDS = 7*24*60*60
-TODAY = PostgresDAO.db.query("SELECT sessions.session_end FROM sessions order by session_end DESC LIMIT 1;", expect_return=True)[0][0]
-#TODAY -= datetime.timedelta(days=60)
+DATASET_START, DATASET_END = PostgresDAO.db.query("SELECT min(session_end), max(session_end) FROM Sessions;", expect_return=True)[0]
+TODAY = DATASET_END
+
+
+class ChronologyError(Exception):
+    """A custom exception to help diagnose problems with the time_travel function."""
+    def __init__(self, dataset_start: datetime.datetime, dataset_end: datetime.datetime):
+        super().__init__(f"""You can't set the date earlier or later then the dataset,
+It has to between {dataset_start.strftime('%d-%m-%Y')} and {dataset_end.strftime('%d-%m-%Y')}.""")
+
 
 #TODO: write documentation, add some print statements
 
@@ -73,11 +81,16 @@ class Product:
         return self.score > product2.score
 
     @staticmethod
-    def get_from_pg(db: PostgresDAO.PostgreSQLdb):
+    def get_from_pg(db: PostgresDAO.PostgreSQLdb, up_until_date: datetime.datetime = None):
         query = """SELECT Ordered_products.product_id, Ordered_products.quantity, Sessions.session_end
             FROM SESSIONS
             INNER JOIN Ordered_products ON Sessions.session_id = Ordered_products.session_id
-            ;"""
+            """
+
+        if not up_until_date is None:
+            query += f"WHERE Sessions.session_end < '{up_until_date.strftime('%Y-%m-%d')}'"
+
+        query += ";"
 
         order_dataset = db.query(query, expect_return=True)
 
@@ -114,11 +127,24 @@ class Top:
             self.insert(object)
 
 
-if __name__ == "__main__":
-    Product.get_from_pg(PostgresDAO.db)
+def time_travel(day: int, month: int, year: int, dataset_start: datetime.datetime, dataset_end: datetime.datetime):
+    global TODAY
+    new_date = datetime.datetime(year, month, day)
+    if new_date < dataset_start or new_date > dataset_end:
+        raise ChronologyError(dataset_start, dataset_end)
+    TODAY = new_date
+
+
+def popularity_recommendation(current_date, db: PostgresDAO.PostgreSQLdb):
+    Product.get_from_pg(db, current_date)
     Product.score_all()
     top = Top(4)
     top.insert_multiple(Product.tracker.values())
     insert_dataset = [tuple([product.product_id for product in top.data])]
     query_functions.create_rec_table_query(PostgresDAO.db, 'popularity_recommendation', '')
-    PostgresDAO.db.query("INSERT INTO popularity_recommendation VALUES %s", insert_dataset, commit_changes=True)
+    db.query("INSERT INTO popularity_recommendation VALUES %s", insert_dataset, commit_changes=True)
+
+
+if __name__ == "__main__":
+    time_travel(22, 7, 2018, DATASET_START, DATASET_END)
+    popularity_recommendation(TODAY, PostgresDAO.db)
