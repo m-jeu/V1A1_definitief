@@ -21,12 +21,16 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     ex query_attributes: 'product_id, sub_sub_category, selling_price, selling_price'
     """
     # create recommendation table in psql
-    query_functions.create_rec_table_query(db, table, "prod_ids VARCHAR,")
+    query_functions.create_rec_table_query(db, table, "prod_id VARCHAR,")
     # weird but working way to connect with psql psql.read_sql_query requires connection
     # select all from products # todo implement way to FROM profiles with param
     df = psql.read_sql_query("SELECT * FROM products", db._connect())
     # list where all recommendations will be stored so they can be inserted into psql at once.
     all_recommendations = []
+
+    extra_recs = psql.read_sql_query("SELECT * FROM popularity_recommendation", db._connect())
+    db._close_connection()
+
     # for all indexes in length of df (will be used to itterate over each product)
     for i in range(0, len(df)):
         # attribute values of the current product (only the attributes passed as param)
@@ -36,20 +40,26 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
         # query over the df find products where a certain filter(filter defined in function call) matches the current product
         # recs = all recommendations in a df
         recs = df.query(pandas_query%attribute_values)
-        # upload list is list of the first 4 product id's in the available recs [column_names.split(', ')[0]]
-        # because of iloc upto the first 4 elements will be taken no indexing error! :)
-        recommendations = list(recs.iloc[:4]['product_id'])
+        # upload list is list of the 4 random recommendable product id's in the available recs [column_names.split(', ')[0]]
+        length = 4
+        if len(recs) < 4:
+            length = len(recs)
+        recommendations = list(recs.sample(n=length)['product_id'])
         # and insert the current id at recommendations[0] this will be the PK! this is the id the recommendation is made for
+        if len(recommendations) < 4:
+            for index in range(len(recommendations), 4):
+                recommendations.append(extra_recs.iloc[0][index])
         recommendations.insert(0, df['product_id'][i])
         # make a tuple for insert
         recommendations = tuple(recommendations)
         # insert into all_recommendations
         all_recommendations.append((recommendations, ))
     # fill the recommendation table with all the recommendations
+    db._close_connection()
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
 if __name__ == "__main__":
-    propositional_logic_recommendation(PostgresDAO.db, 'propositional_logic_recommendation',
+    propositional_logic_recommendation(PostgresDAO.db, 'sub_sub_category_price_rec',
                                        recommendation_dict['sub_sub_category and price'][0],
-                                       recommendation_dict['sub_sub_category and price'][1],
+                                       recommendation_dict['sub_sub_category and price'][1]
                                        )
