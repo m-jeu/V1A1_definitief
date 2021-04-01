@@ -39,10 +39,32 @@ def score_multiplier(x: int, sensitivity: float = 1.0, upper_bound: float = 3.0)
 
 
 class Product:
+    """Class to store the sales figures of a single product-id.
+    Stores itself as value in the tracker, with it's product_id as key.
+
+    Attributes:
+        tracker:
+            universal dictionairy through all class instances that stores all class instances as values,
+            with their product_ids as keys.
+        product_id(str): a product's ID as it appears in MongoDB/PostgreSQL.
+        today(datetime.datetime): the date/time the recommendation thinks it is.
+        sold(int): the total amount of times this product has been ordered.
+        sold_lastweek(int): the amount of times this product was sold a week before self.today.
+        earliest_order(datetime.datetime): the earliest day/time this product was found to be sold at.
+        average_weekly_sales: the average amount of times this product is sold per week.
+        score: this product's recommendibility score as determined by the algorithm.
+        """
     tracker = {}
     def __init__(self, product_id: str, today: datetime.datetime):
+        """Initialize class instance.
+
+        Args:
+            product_id: this product's product_id as it appears in MongoDB/PostgreSQL.
+            today: the date/time the algorithm thinks it is.
+
+        Also adds itself to Product.tracker as value, with product_id as key.
+            """
         self.product_id = product_id
-        self.start_date = None
         self.today = today
         self.sold = 0
         self.sold_lastweek = 0
@@ -52,6 +74,11 @@ class Product:
         Product.tracker[product_id] = self
 
     def add_order(self, order_tuple: tuple[str, int, datetime.datetime]):
+        """Add an order as it's returned by the SQL query in Product.get_from_pg()
+        to this product's sold, sold_lastweek and earliest_order.
+
+        Args:
+            order_tuple: a tuple from the SQL query in Product.get_from_pg()."""
         product_id, quantity, session_end = order_tuple
         self.sold += quantity
         if (self.today - session_end).total_seconds() < WEEKINSECONDS:
@@ -60,11 +87,19 @@ class Product:
             self.earliest_order = session_end
 
     def avg_sales_per_week(self):
+        """Calculate this product's average sales per week, and assign it to self.average_weekly_sales."""
         timespan = self.today - self.earliest_order
         week_amount = timespan.total_seconds() / WEEKINSECONDS
         self.average_weekly_sales = self.sold / week_amount
 
-    def calc_score(self) -> int:
+    def calc_score(self) -> float:
+        """Calculate this product's recommendibility-score.
+        Call self.avg_sales_per_week() and score_multiplier to calculate it..
+
+        Assigns result to self.score, and returns it.
+
+        Returns:
+            this product's recommendibility_score"""
         self.avg_sales_per_week()
         increase_from_norm = self.sold_lastweek / self.average_weekly_sales
         score = increase_from_norm * score_multiplier(self.average_weekly_sales)
@@ -82,6 +117,11 @@ class Product:
 
     @staticmethod
     def get_from_pg(db: PostgresDAO.PostgreSQLdb, up_until_date: datetime.datetime = None):
+        """Get all ordered_products from PostgreSQL, and assign them to / create the proper Product instances.
+
+        Args:
+            db: the PostgreSQL database to query for ordered_products.
+            up_until_date: the date up until which session should be included (for time-travelling purposes)."""
         query = """SELECT Ordered_products.product_id, Ordered_products.quantity, Sessions.session_end
             FROM SESSIONS
             INNER JOIN Ordered_products ON Sessions.session_id = Ordered_products.session_id
@@ -101,10 +141,15 @@ class Product:
 
     @staticmethod
     def score_all():
+        """Iterate through all Product instances in Product.tracker, and call calc_score() on them."""
         for product in Product.tracker.values():
             product.calc_score()
 
+
+#TODO: Consider changing name to leaderboard.
+#TODO: Finish docstrings.
 class Top:
+    """A class to allow easy GREATER_THEN comparisons, and collect the top N objects in a dataset."""
     def __init__(self, length: int):
         self.length = length
         self.data = []
@@ -128,6 +173,18 @@ class Top:
 
 
 def time_travel(day: int, month: int, year: int, dataset_start: datetime.datetime, dataset_end: datetime.datetime):
+    """Change the global TODAY constant to a different date, so that the recommendation algorithm can be tested
+    by pretending it's different historical days.
+
+    Args:
+        day: the day of the month to time travel to.
+        month: the month of the year to time travel to.
+        year: the year to time travel to.
+        dataset_start: the first date/time in the dataset.
+        dataset_end: the last date/time in the dataset.
+
+    Raises:
+        ChronologyError if new date is not within dataset start/end."""
     global TODAY
     new_date = datetime.datetime(year, month, day)
     if new_date < dataset_start or new_date > dataset_end:
@@ -135,7 +192,13 @@ def time_travel(day: int, month: int, year: int, dataset_start: datetime.datetim
     TODAY = new_date
 
 
-def popularity_recommendation(current_date, db: PostgresDAO.PostgreSQLdb):
+def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.PostgreSQLdb):
+    """Call all necessary recommendations to fill the popularity_recommendation table in PostgreSQL,
+    according to provided settings.
+
+    Args:
+        current_date, the date / time the algorhitm should think it is.
+        db: the PostgreSQL DB to query."""
     Product.get_from_pg(db, current_date)
     Product.score_all()
     top = Top(4)
