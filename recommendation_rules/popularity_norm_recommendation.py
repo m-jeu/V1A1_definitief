@@ -7,8 +7,9 @@ WEEKINSECONDS = 7*24*60*60
 TODAY = PostgresDAO.db.query("SELECT sessions.session_end FROM sessions order by session_end DESC LIMIT 1;", expect_return=True)[0][0]
 #TODAY -= datetime.timedelta(days=60)
 
-#TODO: write documentation
+#TODO: write documentation, add some print statements
 
+#TODO: Consider adding to Product class
 def score_multiplier(x: int, sensitivity: float = 1.0, upper_bound: float = 3.0) -> float:
     """A multiplier to cancel out the disproportional relative increases in sales
     when a product gets bought that doesn't get bought often.
@@ -55,7 +56,7 @@ class Product:
         week_amount = timespan.total_seconds() / WEEKINSECONDS
         self.average_weekly_sales = self.sold / week_amount
 
-    def score(self) -> int:
+    def calc_score(self) -> int:
         self.avg_sales_per_week()
         increase_from_norm = self.sold_lastweek / self.average_weekly_sales
         score = increase_from_norm * score_multiplier(self.average_weekly_sales)
@@ -88,7 +89,7 @@ class Product:
     @staticmethod
     def score_all():
         for product in Product.tracker.values():
-            product.score()
+            product.calc_score()
 
 class Top:
     def __init__(self, length: int):
@@ -108,3 +109,16 @@ class Top:
         if len(self.data) > self.length:
             self.data.pop()#TODO: Rewrite so object doesn't get added at index over self.length - 1 at all instead of popping it
 
+    def insert_multiple(self, object_list: list):
+        for object in object_list:
+            self.insert(object)
+
+
+if __name__ == "__main__":
+    Product.get_from_pg(PostgresDAO.db)
+    Product.score_all()
+    top = Top(4)
+    top.insert_multiple(Product.tracker.values())
+    insert_dataset = [tuple([product.product_id for product in top.data])]
+    query_functions.create_rec_table_query(PostgresDAO.db, 'popularity_recommendation', '')
+    PostgresDAO.db.query("INSERT INTO popularity_recommendation VALUES %s", insert_dataset, commit_changes=True)
