@@ -226,12 +226,12 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
 
 ### Actual function calls to fill the database
-if __name__ == "__main__":
+def start_mongo_to_pg(filename):
     print("--START MONGO-TO-PG--", end="\n\n\n")
 
     #Regenerate DB
     print("Regenerating the PostgreSQL database.")
-    PostgresDAO.db.regenerate_db("DDL1.txt")
+    PostgresDAO.db.regenerate_db(filename)
     print("PostgreSQL database has been regenerated!", end="\n\n")
 
     #Fill the products table in PostgreSQL TODO: Add all the missing attributes
@@ -249,3 +249,7 @@ if __name__ == "__main__":
     print("Filling the Profiles, Bu and Sessions tables.")
     fill_sessions_profiles_bu(PostgresDAO.db, products_in_existance)
     print("The Profiles, Bu and Sessions tables have been filled!", end="\n\n")
+
+
+if __name__ == "__main__":
+    start_mongo_to_pg("DDL1.txt")
