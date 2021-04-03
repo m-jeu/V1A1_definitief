@@ -36,7 +36,7 @@ class Recom(Resource):
     returns status code 418"""
         if count != 4:
             return ([], 418)
-        if rec_type == 'simple_rec':
+        if rec_type == 'popularity_rec':
             return PostgresDAO.db.query("SELECT * FROM popularity_recommendation;", expect_return=True)[0], 200
         elif rec_type == 'sub_sub_category_price_rec':
             return PostgresDAO.db.query("SELECT pro1, pro2, pro3, pro4 FROM sub_sub_category_price_rec where prod_id = %s", (profileid,), expect_return=True)[0], 200

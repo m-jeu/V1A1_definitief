@@ -229,7 +229,7 @@ class HUWebshop(object):
         of expected recommendations; to have more user information in the REST
         request, this function would have to change."""
 
-        if rec == 'simple_rec':
+        if rec == 'popularity_rec':
             resp = requests.get(self.recseraddress + "/" + str(count) + "/" + "nothing" + "/" + rec)
         elif rec == 'sub_sub_category_price_rec':
             resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec)
@@ -272,7 +272,7 @@ class HUWebshop(object):
             'pend': skipindex + session['items_per_page'] if session['items_per_page'] > 0 else prodcount, \
             'prevpage': pagepath+str(page-1) if (page > 1) else False, \
             'nextpage': pagepath+str(page+1) if (session['items_per_page']*page < prodcount) else False, \
-            'r_products':self.recommendations(4, 'simple_rec'), \
+            'r_products':self.recommendations(4, 'popularity_rec'), \
             'r_type':list(self.recommendationtypes.keys())[0],\
             'r_string':list(self.recommendationtypes.values())[0]\
             })
@@ -295,7 +295,7 @@ class HUWebshop(object):
             product["itemcount"] = tup[1]
             i.append(product)
         return self.renderpackettemplate('shoppingcart.html',{'itemsincart':i,\
-            'r_products':self.recommendations(4, 'simple_rec'), \
+            'r_products':self.recommendations(4, 'popularity_rec'), \
             'r_type':list(self.recommendationtypes.keys())[2],\
             'r_string':list(self.recommendationtypes.values())[2]})
 
