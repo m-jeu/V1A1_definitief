@@ -2,7 +2,26 @@ from V1A1_definitief.database import PostgresDAO
 from V1A1_definitief.recommendation_rules import statistics
 
 
+def create_product_attribute_and_price_information_table(db: PostgresDAO.db, product_attribute: str = "sub_sub_category"):
+    """Create a PostgreSQL table to contain price information about a certain product attribute
+    called {product_attribute}_price_information.
 
+    The table will have 3 rows:
+    -a row for the value of the product attribute, with the name of the product attribute as primary key.
+    -a row for the average price of products with this product attribute value called average_price.
+    -a row for the standard deviation of products with this product attribute value called standard_deviation.
+
+    Args:
+        db: the postgreSQL database to query.
+        product_attribute: what the product attribute is called. 'sub_sub_category' by default."""
+    db.query(f"DROP TABLE IF EXISTS {product_attribute}_price_information;", commit_changes=True)
+    query = f"""CREATE TABLE {product_attribute}_price_information
+(
+    {product_attribute} VARCHAR,
+    average_price FLOAT,
+    standard_deviation FLOAT,
+    PRIMARY KEY({product_attribute});"""
+    db.query(query, commit_changes=True)
 
 
 def get_attribute_price_information(db: PostgresDAO.db, product_attribute: str = "sub_sub_category") -> list[tuple]:
