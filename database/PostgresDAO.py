@@ -4,9 +4,9 @@ import psycopg2.extras
 
 #Vul hier je eigen PostgreSQL credentials in:
 host = "localhost"
-database = "rcmd"
+database = ""
 user = "postgres"
-password = "DataBAE117"
+password = ""
 port = "5432"
 #try not to push them to github
 
