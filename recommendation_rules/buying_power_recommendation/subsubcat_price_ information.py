@@ -2,6 +2,9 @@ from V1A1_definitief.database import PostgresDAO
 from V1A1_definitief.recommendation_rules import statistics
 
 
+
+
+
 def get_attribute_price_information(db: PostgresDAO.db, product_attribute: str = "sub_sub_category") -> list[tuple]:
     """Query PostgreSQL database (as configured by mongo_to_pg.py) for a certain attribute and
     the selling price of every product in the Products table.
@@ -39,10 +42,16 @@ def grouped_attribute_prices_to_PostgreSQL_dataset(grouped_attribute_prices: dic
     """Convert the return from group_attribute_prices into a dataset that can be used to insert into a PostgreSQL
     database in the format of [(attribute_value, price_average, price_standard_deviation)].
 
-    """
+    Args:
+        grouped_attribute_prices: the return from group_attribute_prices()
+
+    Returns:
+        dataset in the format of [(attribute_value, price_average, price_standard_deviation)]"""
     dataset = []
     for attribute_value, prices in grouped_attribute_prices.items():
         price_avg = statistics.avg(prices)
         standard_deviation = statistics.standard_deviation(prices, price_avg)
         dataset.append((attribute_value, price_avg, standard_deviation))
     return dataset
+
+
