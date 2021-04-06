@@ -1,4 +1,5 @@
 from V1A1_definitief.database import PostgresDAO
+from V1A1_definitief.recommendation_rules import statistics
 
 
 def get_attribute_price_information(db: PostgresDAO.db, product_attribute: str = "sub_sub_category") -> list[tuple]:
@@ -34,3 +35,14 @@ def group_attribute_prices(dataset: list[tuple]) -> dict:
     return grouped_dict
 
 
+def grouped_attribute_prices_to_PostgreSQL_dataset(grouped_attribute_prices: dict) -> list[tuple]:
+    """Convert the return from group_attribute_prices into a dataset that can be used to insert into a PostgreSQL
+    database in the format of [(attribute_value, price_average, price_standard_deviation)].
+
+    """
+    dataset = []
+    for attribute_value, prices in grouped_attribute_prices.items():
+        price_avg = statistics.avg(prices)
+        standard_deviation = statistics.standard_deviation(prices, price_avg)
+        dataset.append((attribute_value, price_avg, standard_deviation))
+    return dataset
