@@ -20,8 +20,8 @@ def frequently_combined(db):
                                         from ordered_products group by session_id) select * from orders""", db._connect())
     db._close_connection()
     # create a new table where the combinations will be inserted
-    query_functions.create_rec_table_query(db, 'freq_combined', """product_id VARCHAR,
-    sub_sub_category VARCHAR,""")
+    query_functions.create_small_table(db, 'freq_combined', """product_id VARCHAR,
+    sub_sub_category VARCHAR""")
     # df with all products
     products = psql.read_sql_query("""select * from products""", db._connect())
     db._close_connection()
@@ -29,7 +29,7 @@ def frequently_combined(db):
     # eventual upload list that will be inserted into the combination table.
     upload_list = []
     # for all indexes in length of the products df (will be used to iterate over each product)
-    for i in range(0, 100):
+    for i in range(0, len(products)):
         # current product_id in iteration
         cur_prod_id = products.iloc[i]['product_id']
         # find all sessions where the current product_id is present by checking if cur_prod_id is a subset of an array/set
