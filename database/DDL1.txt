@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS Profiles;
 CREATE TABLE Profiles
 (
 	profile_id VARCHAR(128) NOT NULL,
+	budget_preference VARCHAR,
 	PRIMARY KEY(profile_id)
 );
 
