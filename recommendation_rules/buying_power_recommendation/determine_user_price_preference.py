@@ -1,4 +1,5 @@
 from V1A1_definitief.database import PostgresDAO
+from V1A1_definitief.recommendation_rules import statistics
 
 
 def get_attribute_price_information(db: PostgresDAO.PostgreSQLdb, product_attribute: str) -> dict:
@@ -60,5 +61,77 @@ INNER JOIN
 ;"""
     return db.query(query, expect_return=True)
 
+
+class OrderedProduct:
+    """A product, as ordered by a certain profile_id, in 1 session.
+
+    Attributes:
+        profile_id: the profile ID the product was ordered by.
+        attribute_value: the value of a certain product attribute, as specified in profile_order_products_from_postgreSQL().
+        quantity: the amount of times this product was ordered by this profile in that session.
+        price: the product's price in cents.
+        devs_from_avg:
+            the amount of standard deviations (positive or negative) this product is removed from the average
+            of it's product attribute value (as provided by get_attribute_price_information)."""
+    def __init__(self, order_tuple: tuple, att_price_info: dict): #TODO: Check what attributes actually need to be saved
+        """Initialize class instance.
+
+        Args:
+            order_tuple: a tuple as returned in list by profile_order_products_from_postgreSQL().
+            att_price_info:
+                a dictionairy containing the average price and standard price deviation for products with a certain
+                attribute_value, as returned by get_attribute_price_information()"""
+        self.profile_id, self.attribute_value, self.quantity, self.price = order_tuple
+        self.devs_from_avg = ((att_price_info[self.attribute_value][0] - self.price) / att_price_info[self.attribute_value][1])
+
+
+class Profile:
+    """A profile.
+
+    Attributes:
+        """
+    tracker = {}
+    def __init__(self, id: str):
+        self.id = id
+        self.ordered_products = []
+        self.budget_segment = None
+        Profile.tracker[id] = self
+
+    def insert_product(self, ordered_product: OrderedProduct):
+        self.ordered_products.append(ordered_product)
+
+    def calculate_budget_segment(self, deviation_amount: int = 1):
+        deviations = []
+        for o_p in self.ordered_products:
+            deviations += [o_p.score] * o_p.quantity
+        avg_deviation = statistics.avg(deviations)
+        if avg_deviation > deviation_amount:
+            self.budget_segment = "Luxury"
+        elif avg_deviation < -deviation_amount:
+            self.budget_segment = "Budget"
+        else:
+            self.budget_segment = "Normal"
+
+    @staticmethod
+    def calculate_budget_segment_ALL(deviation_amount: int = 1):
+        for profile in Profile.tracker.values():
+            profile.calculate_budget_segment(deviation_amount)
+
+    @staticmethod
+    def get_all_from_pg(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
+        price_information = get_attribute_price_information(db, product_attribute)
+        dataset = profile_order_products_from_postgreSQL(db, product_attribute)
+        for tuple in dataset:
+            if not tuple[0] in Profile.tracker:
+                Profile(tuple[0])
+            Profile.tracker[tuple[0]].insert_product(OrderedProduct(tuple, price_information))
+
+    @staticmethod
+    def write_all_to_pg(db: PostgresDAO.PostgreSQLdb):
+        dataset = []
+        for profile in Profile.tracker.values():
+            dataset.append((profile.budget_segment, profile.id))
+        query = "UPDATE Profiles SET budget_preference = %s WHERE profile_id = %s;"
+        db.many_update_queries(query, dataset, fast_execution=True)
 
 
