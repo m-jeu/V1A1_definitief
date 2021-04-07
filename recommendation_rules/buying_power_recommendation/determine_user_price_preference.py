@@ -101,16 +101,19 @@ class Profile:
         self.ordered_products.append(ordered_product)
 
     def calculate_budget_segment(self, deviation_amount: int = 1):
-        deviations = []
-        for o_p in self.ordered_products:
-            deviations += [o_p.score] * o_p.quantity
-        avg_deviation = statistics.avg(deviations)
-        if avg_deviation > deviation_amount:
-            self.budget_segment = "Luxury"
-        elif avg_deviation < -deviation_amount:
-            self.budget_segment = "Budget"
-        else:
+        if len(self.ordered_products) == 0:
             self.budget_segment = "Normal"
+        else:
+            deviations = []
+            for o_p in self.ordered_products:
+                deviations += [o_p.devs_from_avg] * o_p.quantity
+            avg_deviation = statistics.avg(deviations)
+            if avg_deviation > deviation_amount:
+                self.budget_segment = "Luxury"
+            elif avg_deviation < -deviation_amount:
+                self.budget_segment = "Budget"
+            else:
+                self.budget_segment = "Normal"
 
     @staticmethod
     def calculate_budget_segment_ALL(deviation_amount: int = 1):
@@ -124,14 +127,25 @@ class Profile:
         for tuple in dataset:
             if not tuple[0] in Profile.tracker:
                 Profile(tuple[0])
-            Profile.tracker[tuple[0]].insert_product(OrderedProduct(tuple, price_information))
+            if not tuple[1] is None:
+                if price_information[tuple[1]][1] != 0.0:
+                    Profile.tracker[tuple[0]].insert_product(OrderedProduct(tuple, price_information))
 
     @staticmethod
     def write_all_to_pg(db: PostgresDAO.PostgreSQLdb):
         dataset = []
         for profile in Profile.tracker.values():
             dataset.append((profile.budget_segment, profile.id))
+        print(dataset)
         query = "UPDATE Profiles SET budget_preference = %s WHERE profile_id = %s;"
         db.many_update_queries(query, dataset, fast_execution=True)
 
 
+def determine_user_price_preferences(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
+    Profile.get_all_from_pg(db, product_attribute)
+    Profile.calculate_budget_segment_ALL()
+    Profile.write_all_to_pg(db)
+
+
+if __name__ == "__main__":
+    determine_user_price_preferences(PostgresDAO.db, "sub_sub_category")
