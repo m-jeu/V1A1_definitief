@@ -233,7 +233,8 @@ class HUWebshop(object):
             resp = requests.get(self.recseraddress + "/" + str(count) + "/" + "nothing" + "/" + rec)
         elif rec == 'sub_sub_category_price_rec':
             resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec)
-
+        elif rec == 'freq_combined_sub_sub_category':
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec)
         if resp.status_code == 200:
             recs = eval(resp.content.decode())
             queryfilter = {"_id": {"$in": recs}}
@@ -290,12 +291,16 @@ class HUWebshop(object):
     def shoppingcart(self):
         """ This function renders the shopping cart for the user."""
         i = []
+        product_ids = ''
         for tup in session['shopping_cart']:
+
             product = self.prepproduct(self.database.products.find_one({"_id":str(tup[0])}))
             product["itemcount"] = tup[1]
             i.append(product)
+            product_ids += f"{str(tup[0])}| "
+        product_ids = product_ids[0:-2]
         return self.renderpackettemplate('shoppingcart.html',{'itemsincart':i,\
-            'r_products':self.recommendations(4, 'popularity_rec'), \
+            'r_products':self.recommendations(4, 'freq_combined_sub_sub_category', product_id=str(product_ids)), \
             'r_type':list(self.recommendationtypes.keys())[2],\
             'r_string':list(self.recommendationtypes.values())[2]})
 
