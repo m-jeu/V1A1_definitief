@@ -38,8 +38,12 @@ class Recom(Resource):
             return ([], 418)
         if rec_type == 'popularity_rec':
             return PostgresDAO.db.query("SELECT * FROM popularity_recommendation;", expect_return=True)[0], 200
+        elif rec_type == 'freq_combined_sub_sub_category':
+            profileid = profileid.split('| ')
+            profileid = tuple(profileid)
+            return PostgresDAO.db.query(f"""SELECT pro1, pro2, pro3, pro4 FROM sub_sub_recommendations where prod_id in %s order by random() limit 4;""", (profileid, ), expect_return=True)[0], 200
         elif rec_type == 'sub_sub_category_price_rec':
-            return PostgresDAO.db.query("SELECT pro1, pro2, pro3, pro4 FROM sub_sub_category_price_rec where prod_id = %s", (profileid,), expect_return=True)[0], 200
+            return PostgresDAO.db.query("""SELECT pro1, pro2, pro3, pro4 FROM sub_sub_category_price_rec where prod_id = %s""", (profileid,), expect_return=True)[0], 200
 
 # This method binds the Recom class to the REST API, to parse specifically
 # requests in the format described below.
