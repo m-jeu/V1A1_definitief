@@ -45,8 +45,7 @@ def frequently_combined(db):
 
         # if the product has never been bought or only bought by itself. we store cur_prod_id's sub_sub_category as most_combined
         if len(product_id_df) <= 0:
-            most_combined = products.query("""product_id == '%s' """%cur_prod_id)['sub_sub_category'].values[0]
-
+            most_combined = products.query("""product_id == "%s" """%cur_prod_id)['sub_sub_category'].values[0]
         else:
             x = list(itertools.chain(*product_id_df))
             all_categories_count = products.query("""product_id == %s """ % x)
@@ -54,8 +53,6 @@ def frequently_combined(db):
 
         upload_list.append((tuple([cur_prod_id] + [most_combined]), ))
     db.many_update_queries(f"INSERT INTO freq_combined VALUES %s", upload_list)
-
-
 
 # temporary code to measure time to run
 now = datetime.now()
