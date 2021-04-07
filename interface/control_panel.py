@@ -6,6 +6,7 @@ import threading
 
 db_gen_is_running = False
 
+
 def start_mongo():
     global db_gen_is_running
     thread = threading.Thread(target=mongo_to_pg.start_mongo_to_pg, args=('../database/DDL1.txt',))
@@ -13,8 +14,10 @@ def start_mongo():
         db_gen_is_running = True
         thread.start()
 
+
 def start_popularity():
     popularity_norm_recommendation.start_popularity_norm_recommendation()
+
 
 def start_time_travel():
     time = time_input.get()
