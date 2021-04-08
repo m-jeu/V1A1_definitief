@@ -84,6 +84,8 @@ class OrderedProduct:
         self.profile_id, self.attribute_value, self.quantity, self.price = order_tuple
         self.devs_from_avg = ((att_price_info[self.attribute_value][0] - self.price) / att_price_info[self.attribute_value][1])
 
+A, B, C = 0, 0, 0
+
 
 class Profile:
     """A profile.
@@ -113,7 +115,7 @@ class Profile:
             ordered_product: The OrderedProduct object to insert."""
         self.ordered_products.append(ordered_product)
 
-    def calculate_budget_segment(self, deviation_amount: int = 1):
+    def calculate_budget_segment(self, deviation_amount: int or float = 1):
         """Calculate what budget segment this profile is in, and assign it to self.budget_segment.
         If there are no products in self.ordered_products, self.budget_segment stays at None.
 
@@ -135,13 +137,14 @@ class Profile:
                 self.budget_segment = "Normal"
 
     @staticmethod
-    def calculate_budget_segment_ALL(deviation_amount: int = 1):
+    def calculate_budget_segment_ALL(deviation_amount: int or float = 1):
         """Call calculate_budget_segment() on all Profiles in Profile.tracker.
 
         Args:
-            the average amount of standard price deviations a profile should vary from the average
-            in whatever sub_sub_categories they have bought products you should start drawing conclusions from.
-            1 by default."""
+            deviation_amount:
+                the average amount of standard price deviations a profile should vary from the average
+                in whatever sub_sub_categories they have bought products you should start drawing conclusions from.
+                1 by default."""
         for profile in Profile.tracker.values():
             profile.calculate_budget_segment(deviation_amount)
 
@@ -177,16 +180,21 @@ class Profile:
         db.many_update_queries(query, dataset, fast_execution=True)
 
 
-def determine_user_price_preferences(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
+def determine_user_price_preferences(db: PostgresDAO.PostgreSQLdb, product_attribute: str, deviation_amount: int or float = 1):
     """Call all necessary methods to gather data about price preference, process it, and write it to PostgreSQL.
 
     Args:
         db: The PostgreSQL database to query.
-        product_attribute: the product attribute budget preference should be judged by."""
+        product_attribute: the product attribute budget preference should be judged by.
+        deviation_amount:
+            the average amount of standard price deviations a profile should vary from the average
+            in whatever sub_sub_categories they have bought products you should start drawing conclusions from.
+            1 by default."""
+    db.query("UPDATE Profiles SET budget_preference = NULL WHERE budget_preference IS NOT NULL", commit_changes=True)
     Profile.get_all_from_pg(db, product_attribute)
-    Profile.calculate_budget_segment_ALL()
+    Profile.calculate_budget_segment_ALL(deviation_amount)
     Profile.write_all_to_pg(db)
 
 
 if __name__ == "__main__":
-    determine_user_price_preferences(PostgresDAO.db, "sub_sub_category")
+    determine_user_price_preferences(PostgresDAO.db, "sub_sub_category", 0.5)
