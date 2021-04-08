@@ -55,14 +55,20 @@ def frequently_combined(db):
     db.many_update_queries(f"INSERT INTO freq_combined VALUES %s", upload_list)
 
 # temporary code to measure time to run
-now = datetime.now()
-now = now.strftime("%H:%M:%S")
-print("start time", now)
 
-frequently_combined(PostgresDAO.db)
 
-# temporary code to measure time to run
-now = datetime.now()
-now = now.strftime("%H:%M:%S")
-print("end time =", now)
+def start_frequently_combined():
+    now = datetime.now()
+    now = now.strftime("%H:%M:%S")
+    print("start time", now)
 
+    frequently_combined(PostgresDAO.db)
+
+    # temporary code to measure time to run
+    now = datetime.now()
+    now = now.strftime("%H:%M:%S")
+    print("end time =", now)
+
+
+if __name__ == "__main__":
+    start_frequently_combined()
