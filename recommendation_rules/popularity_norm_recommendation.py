@@ -211,18 +211,13 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
 def start_popularity_norm_recommendation():
     print("--START popularity_norm_recommendation--", end="\n\n\n")
     print("Creating popularity based recommendation.")
-    time_travel(22, 7, 2018, DATASET_START, DATASET_END)
     popularity_recommendation(TODAY, PostgresDAO.db)
     print("Finished popularity based recommendation.")
 
 
 def start_time_travel(day, month, year):
-    print("--START popularity_norm_recommendation--", end="\n\n\n")
-    print("Creating popularity based recommendation.")
     time_travel(day, month, year, DATASET_START, DATASET_END)
-    popularity_recommendation(TODAY, PostgresDAO.db)
-    print(f"traveld through time to: {day}, {month}, {year}")
-    print("Finished popularity based recommendation.")
+    print(f"traveled through time to: {day}, {month}, {year}")
 
 
 if __name__ == "__main__":
