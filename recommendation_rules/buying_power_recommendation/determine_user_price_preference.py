@@ -89,45 +89,87 @@ class Profile:
     """A profile.
 
     Attributes:
-        """
+        id: a profile's id.
+        ordered_products: list containing an OrderedProduct object for every product ordered in a single session.
+        budget_segment:
+            'Normal', 'Budget' or 'Luxury' to represent this profile's spending habits, None if not enough
+            data is available to draw conclusions from.
+        tracker: a class-wide dictionairy that contains profile_ids as keys, and Profile objects as values."""
     tracker = {}
     def __init__(self, id: str):
+        """Initialize class instance, and store self in Profile.tracker as value under own profile_id as key.
+
+        Args:
+            id: profile_id"""
         self.id = id
         self.ordered_products = []
         self.budget_segment = None
         Profile.tracker[id] = self
 
     def insert_product(self, ordered_product: OrderedProduct):
+        """Insert an ordered_product into self.ordered_products.
+
+        Args:
+            ordered_product: The OrderedProduct object to insert."""
         self.ordered_products.append(ordered_product)
 
     def calculate_budget_segment(self, deviation_amount: int = 1):
-        deviations = []
-        for o_p in self.ordered_products:
-            deviations += [o_p.score] * o_p.quantity
-        avg_deviation = statistics.avg(deviations)
-        if avg_deviation > deviation_amount:
-            self.budget_segment = "Luxury"
-        elif avg_deviation < -deviation_amount:
-            self.budget_segment = "Budget"
-        else:
-            self.budget_segment = "Normal"
+        """Calculate what budget segment this profile is in, and assign it to self.budget_segment.
+        If there are no products in self.ordered_products, self.budget_segment stays at None.
+
+        Args:
+            deviation_amount:
+                the average amount of standard price deviations a profile should vary from the average
+                in whatever sub_sub_categories they have bought products you should start drawing conclusions from.
+                1 by default."""
+        if len(self.ordered_products) > 0:
+            deviations = []
+            for o_p in self.ordered_products:
+                deviations += [o_p.devs_from_avg] * o_p.quantity
+            avg_deviation = statistics.avg(deviations)
+            if avg_deviation > deviation_amount:
+                self.budget_segment = "Luxury"
+            elif avg_deviation < -deviation_amount:
+                self.budget_segment = "Budget"
+            else:
+                self.budget_segment = "Normal"
 
     @staticmethod
     def calculate_budget_segment_ALL(deviation_amount: int = 1):
+        """Call calculate_budget_segment() on all Profiles in Profile.tracker.
+
+        Args:
+            the average amount of standard price deviations a profile should vary from the average
+            in whatever sub_sub_categories they have bought products you should start drawing conclusions from.
+            1 by default."""
         for profile in Profile.tracker.values():
             profile.calculate_budget_segment(deviation_amount)
 
     @staticmethod
     def get_all_from_pg(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
+        """Call get_attribute_price_information() and profile_order_products_from_postgreSQL to get all
+        necesary information to add all products by a profile with the relevant attributes to Profile.tracker.
+
+        Args:
+            db: The PostgreSQL database to query.
+            product_attribute:
+                the product attribute to use to calculate price preference tendencies, for instance, 'sub_sub_category'.
+                NOTE: This product attribute needs to be used in subsubcat_price_information.py first."""
         price_information = get_attribute_price_information(db, product_attribute)
         dataset = profile_order_products_from_postgreSQL(db, product_attribute)
         for tuple in dataset:
             if not tuple[0] in Profile.tracker:
                 Profile(tuple[0])
-            Profile.tracker[tuple[0]].insert_product(OrderedProduct(tuple, price_information))
+            if not tuple[1] is None: #If the product_attribute_value is None, adding an ordered_product is quite pointless.
+                if price_information[tuple[1]][1] != 0.0: #If a product_attribute_value's standard deviation, adding the ordered product is also quite pointless.
+                    Profile.tracker[tuple[0]].insert_product(OrderedProduct(tuple, price_information))
 
     @staticmethod
     def write_all_to_pg(db: PostgresDAO.PostgreSQLdb):
+        """Write all profiles in Profile.tracker to the corresponding entry in the Profiles table in PostgreSQL.
+
+        Args:
+            db: The PostgreSQL database to write to."""
         dataset = []
         for profile in Profile.tracker.values():
             dataset.append((profile.budget_segment, profile.id))
@@ -135,3 +177,16 @@ class Profile:
         db.many_update_queries(query, dataset, fast_execution=True)
 
 
+def determine_user_price_preferences(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
+    """Call all necessary methods to gather data about price preference, process it, and write it to PostgreSQL.
+
+    Args:
+        db: The PostgreSQL database to query.
+        product_attribute: the product attribute budget preference should be judged by."""
+    Profile.get_all_from_pg(db, product_attribute)
+    Profile.calculate_budget_segment_ALL()
+    Profile.write_all_to_pg(db)
+
+
+if __name__ == "__main__":
+    determine_user_price_preferences(PostgresDAO.db, "sub_sub_category")
