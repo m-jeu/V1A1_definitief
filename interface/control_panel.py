@@ -1,6 +1,6 @@
 from tkinter import *
 from V1A1_definitief.database import mongo_to_pg, PostgresDAO
-from V1A1_definitief.recommendation_rules import popularity_norm_recommendation, sub_sub_recommendations
+from V1A1_definitief.recommendation_rules import popularity_norm_recommendation, freq_combined_sub_sub_category_recommendation
 from V1A1_definitief.recommendation_rules.buying_power_recommendation import frequently_combined_proid_sub_sub_category
 import threading
 
@@ -20,7 +20,7 @@ def start_mongo():
 
 def start_sub_sub_recommendations():
     global sub_sub_is_running
-    thread = threading.Thread(target=sub_sub_recommendations.sub_sub_recommendations, args=(PostgresDAO.db, "freq_combined"))
+    thread = threading.Thread(target=freq_combined_sub_sub_category_recommendation.sub_sub_recommendations, args=(PostgresDAO.db, "freq_combined", 4))
     if not sub_sub_is_running:
         sub_sub_is_running = True
         print("started sub_sub_recommendations")
