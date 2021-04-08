@@ -47,30 +47,29 @@ def frequently_combined(db):
         if len(product_id_df) <= 0:
             most_combined = products.query("""product_id == "%s" """%cur_prod_id)['sub_sub_category'].values[0]
         else:
-            x = list(itertools.chain(*product_id_df))
-            all_categories_count = products.query("""product_id == %s """ % x)
+            # make a list of all product_id's that are combined with the current product_id
+            combined_products = list(itertools.chain(*product_id_df))
+            # make df of all the combined product_id's above
+            all_categories_count = products.query("""product_id == %s """ % combined_products)
+            # count the unique sub_sub_category appearences and select the index(sub_sub name) of the maxcount
             most_combined = all_categories_count['sub_sub_category'].value_counts(dropna=False).idxmax()
-
         upload_list.append((tuple([cur_prod_id] + [most_combined]), ))
+    # insert data into DB table for each product_id a sub_sub_category which it has been most combined with.
     db.many_update_queries(f"INSERT INTO freq_combined VALUES %s", upload_list)
-
-# temporary code to measure time to run
-
 
 def start_frequently_combined():
     """This function is being called by the control panel to start the frequently_combined function,
      it also prints a start and end time"""
-    now = datetime.now()
-    now = now.strftime("%H:%M:%S")
-    print("start time", now)
-
     frequently_combined(PostgresDAO.db)
 
+if __name__ == "__main__":
+    # temporary code to measure time to run
+    now = datetime.now()
+    now = now.strftime("%H:%M:%S")
+    print("end time =", now)
+    start_frequently_combined()
     # temporary code to measure time to run
     now = datetime.now()
     now = now.strftime("%H:%M:%S")
     print("end time =", now)
 
-
-if __name__ == "__main__":
-    start_frequently_combined()

@@ -230,11 +230,11 @@ class HUWebshop(object):
         request, this function would have to change."""
 
         if rec == 'popularity_rec':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + "nothing" + "/" + rec)
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + "nothing" + "/" + rec + "/" + session['profile_id'])
         elif rec == 'sub_sub_category_price_rec':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec)
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec+ "/" + session['profile_id'])
         elif rec == 'freq_combined_sub_sub_category':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec)
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec+ "/" + session['profile_id'])
         if resp.status_code == 200:
             recs = eval(resp.content.decode())
             queryfilter = {"_id": {"$in": recs}}
