@@ -1,4 +1,7 @@
 DROP TABLE IF EXISTS freq_combined;
+DROP TABLE IF EXISTS freq_combined_sub_sub_category;
+DROP TABLE IF EXISTS popularity_recommendation;
+DROP TABLE IF EXISTS sub_sub_category_price_rec;
 DROP TABLE IF EXISTS sub_sub_recommendations;
 DROP TABLE IF EXISTS testtable;
 DROP TABLE IF EXISTS propositional_logic_recommendation;
