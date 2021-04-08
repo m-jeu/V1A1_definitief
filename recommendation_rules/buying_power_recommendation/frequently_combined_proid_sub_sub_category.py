@@ -58,6 +58,8 @@ def frequently_combined(db):
 
 
 def start_frequently_combined():
+    """This function is being called by the control panel to start the frequently_combined function,
+     it also prints a start and end time"""
     now = datetime.now()
     now = now.strftime("%H:%M:%S")
     print("start time", now)

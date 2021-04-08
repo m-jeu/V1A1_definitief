@@ -209,6 +209,7 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
 
 
 def start_popularity_norm_recommendation():
+    """This function is being called by the control panel to start the popularity_recommendation function"""
     print("--START popularity_norm_recommendation--", end="\n\n\n")
     print("Creating popularity based recommendation.")
     popularity_recommendation(TODAY, PostgresDAO.db)
@@ -216,6 +217,7 @@ def start_popularity_norm_recommendation():
 
 
 def start_time_travel(day, month, year):
+    """This function is being called by the control panel to set the date of TODAY as the time put into the control panel"""
     time_travel(day, month, year, DATASET_START, DATASET_END)
     print(f"traveled through time to: {day}, {month}, {year}")
 

@@ -86,6 +86,7 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
 def start_propositional_logic_recommendation():
+    """This function is being called by the control panel to start the propositional_logic_recommendation function"""
     propositional_logic_recommendation(PostgresDAO.db, 'sub_sub_category_price_rec',
                                        recommendation_dict['sub_sub_category'][0],
                                        recommendation_dict['sub_sub_category'][1], 0.15, 4
