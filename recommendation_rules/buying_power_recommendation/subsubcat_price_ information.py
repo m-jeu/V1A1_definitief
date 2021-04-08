@@ -107,6 +107,6 @@ def price_info_in_pg(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
 
     db.many_update_queries(query, dataset, fast_execution=True)
 
-
+#TODO: Consider not adding to PostgreSQL, and passing to determine_user_price_preference.py directly instead.
 if __name__ == "__main__":
     price_info_in_pg(PostgresDAO.db, "sub_sub_category")
