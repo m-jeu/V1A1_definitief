@@ -227,6 +227,9 @@ def fill_sessions_profiles_bu(db: PostgresDAO.PostgreSQLdb, valid_product_ids: s
 
 ### Actual function calls to fill the database
 def start_mongo_to_pg(filename):
+    """This function is being called by the control panel to start the mongo_to_pg functions
+    Args:
+        filename: the name of the file that creates the basic database"""
     print("--START MONGO-TO-PG--", end="\n\n\n")
 
     #Regenerate DB
