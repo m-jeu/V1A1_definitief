@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS freq_combined;
+DROP TABLE IF EXISTS sub_sub_recommendations;
+DROP TABLE IF EXISTS testtable;
 DROP TABLE IF EXISTS propositional_logic_recommendation;
 DROP TABLE IF EXISTS simple_recommendation;
 DROP TABLE IF EXISTS Ordered_products;
@@ -5,6 +8,7 @@ DROP TABLE IF EXISTS Sessions;
 DROP TABLE IF EXISTS Products;
 DROP TABLE IF EXISTS Bu;
 DROP TABLE IF EXISTS Profiles;
+
 
 CREATE TABLE Profiles
 (

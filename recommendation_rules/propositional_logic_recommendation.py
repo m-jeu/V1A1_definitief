@@ -85,8 +85,11 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     # fill the recommendation table with all the recommendations
     db.many_update_queries(f"INSERT INTO {table} VALUES %s", all_recommendations)
 
-if __name__ == "__main__":
+def start_propositional_logic_recommendation():
     propositional_logic_recommendation(PostgresDAO.db, 'sub_sub_category_price_rec',
                                        recommendation_dict['sub_sub_category'][0],
                                        recommendation_dict['sub_sub_category'][1], 0.15, 4
                                        )
+
+if __name__ == "__main__":
+    start_propositional_logic_recommendation()

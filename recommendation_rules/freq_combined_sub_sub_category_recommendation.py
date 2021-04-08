@@ -9,7 +9,8 @@ def sub_sub_recommendations(db, table_name, quantity):
     propositional_logic_recommendation.py. These recommendations will be inserted into the table sub_sub_recommendations
     Args:
         db: Postgres.DAO database object
-        table_name: the name of the table that will be created."""
+        table_name: the name of the table that will be created.
+        quantity: the amount of recommendations that need to be generated"""
     # all product_id's and their most frequently combined sub_sub_category
     freq_combined = psql.read_sql_query(f"SELECT product_id , sub_sub_category FROM freq_combined;",db._connect())
     # all products
