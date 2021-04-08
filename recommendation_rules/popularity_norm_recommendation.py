@@ -29,7 +29,7 @@ def score_multiplier(x: int, sensitivity: float = 1.0, upper_bound: float = 3.0)
             1 by default. If set higher, multiplier discriminates against products with a higher
             amount of weekly purchases.
         upper_bound:
-            should be set to the solution to (x^2) / (9 * multiplier = 1).
+            should be set to the solution to (x^2) / (9 * sensitivity) = 1.
 
     Returns:
         number between 0 and 1 to multiply the relative increase in weekly sales by"""
