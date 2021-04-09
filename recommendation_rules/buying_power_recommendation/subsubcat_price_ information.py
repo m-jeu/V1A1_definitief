@@ -50,7 +50,7 @@ def group_attribute_prices(dataset: list[tuple]) -> dict:
         dataset: the dataset as returned by get_attribute_price_information()
 
     Returns:
-        a dictionairy containing every value of the earlier specified product attribute as keys,
+        a dictionary containing every value of the earlier specified product attribute as keys,
         and all prices associated with that product attribute value contained within a list as value."""
     grouped_dict = {}
     for attribute, price in dataset:
