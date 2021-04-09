@@ -63,13 +63,6 @@ def start_frequently_combined():
     frequently_combined(PostgresDAO.db)
 
 if __name__ == "__main__":
-    # temporary code to measure time to run
-    now = datetime.now()
-    now = now.strftime("%H:%M:%S")
-    print("end time =", now)
     start_frequently_combined()
-    # temporary code to measure time to run
-    now = datetime.now()
-    now = now.strftime("%H:%M:%S")
-    print("end time =", now)
+
 

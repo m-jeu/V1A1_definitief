@@ -223,4 +223,6 @@ def start_time_travel(day, month, year):
 
 
 if __name__ == "__main__":
+    # to change the current date remove comment before next line and insert data in ()
+    #start_time_travel(22, 7, 2018)
     start_popularity_norm_recommendation()
