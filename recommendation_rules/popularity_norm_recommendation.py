@@ -52,7 +52,7 @@ class Product:
         sold_lastweek(int): the amount of times this product was sold a week before self.today.
         earliest_order(datetime.datetime): the earliest day/time this product was found to be sold at.
         average_weekly_sales: the average amount of times this product is sold per week.
-        score: this product's recommendibility score as determined by the algorithm.
+        score: this product's recommendability score as determined by the algorithm.
         """
     tracker = {}
     def __init__(self, product_id: str, today: datetime.datetime):
@@ -93,13 +93,13 @@ class Product:
         self.average_weekly_sales = self.sold / week_amount
 
     def calc_score(self) -> float:
-        """Calculate this product's recommendibility-score.
+        """Calculate this product's recommendability-score.
         Call self.avg_sales_per_week() and score_multiplier to calculate it..
 
         Assigns result to self.score, and returns it.
 
         Returns:
-            this product's recommendibility_score"""
+            this product's recommendability_score"""
         self.avg_sales_per_week()
         increase_from_norm = self.sold_lastweek / self.average_weekly_sales
         score = increase_from_norm * score_multiplier(self.average_weekly_sales)
@@ -197,7 +197,7 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
     according to provided settings.
 
     Args:
-        current_date, the date / time the algorhitm should think it is.
+        current_date, the date / time the algorithm should think it is.
         db: the PostgreSQL DB to query."""
     Product.get_from_pg(db, current_date)
     Product.score_all()
