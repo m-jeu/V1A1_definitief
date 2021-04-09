@@ -32,33 +32,53 @@ class Recom(Resource):
     the webshop. At the moment, the API simply returns a random set of products
     to recommend."""
     @staticmethod
-    def freq_combined_sub_sub_category_decision(db, count, productid, rec_type, profileid):
-        budget = {'Luxury': 0.5,
-                  'Normal': 0,
-                  'Budget': -0.5}
-        productid = productid.split('| ')
-        productid = tuple(productid)
+    def freq_combined_sub_sub_category_decision(db, count, productids, budget, profileid):
+        """Function to make live recommendations based on the user's historical spending patterns and which sub_sub categories has been often combined with the
+        product ids in the shoppingcart. If there is not enough historical data about a profile only a recommendation is made based on the most frequently combined
+        sub_sub_category.
+        args:
+            db: PostgresDAO.db object
+            count: the amount of recommendations requested
+            productids: a string of product id's this can be 1 or multiple ids
+            budget: The budget rules that determine how many standard deviations lower/higher the price range should be
+            profileid: The profileid of the current customer
+        Returns:
+            a response to the front-end which includes which product_id's to recommend"""
+        # split the productids string to make it a list
+        productids = productids.split('| ')
+        productids = tuple(productids)
+        # find the budget preference of the current user that's is stored in PostgreSQL budget, normal or luxury
         budget_preference = db.query("SELECT budget_preference from profiles where profile_id = %s;",
                                      (profileid,),
                                      expect_return=True)[0][0]
-        with open('output.txt', 'w') as output:
-            output.write(f'{profileid} budget {budget_preference}')
+        # list of all the recommendations where a the required amount of recommendations will be sampled
+        all_recommendations = []
+        # if there is not enough data about the profile to determine the budget preference continue
         if budget_preference is None:
-            return PostgresDAO.db.query(
-                f"""SELECT pro1, pro2, pro3, pro4 FROM freq_combined_sub_sub_category where prod_id in %s order by random() limit {count};""",
-                (productid,), expect_return=True)[0], 200
-        else:
-            all_recommendations = []
-            for id in productid:
+            for productid in productids:
                 # voor elk product in product id
+                recommendations = db.query(
+                    f"""SELECT pro1, pro2, pro3, pro4 FROM freq_combined_sub_sub_category where prod_id = %s""",
+                    (productid,), expect_return=True)[0]
+                for rec in recommendations:
+                    all_recommendations.append(rec)
+            # return the required amount of recommendations from all_recommendations
+            return tuple(random.sample(all_recommendations, count)), 200
+        else:
+            for productid in productids:
+                # fetch most frequenly combined sub_sub_category with the current productid from the db
                 most_combined_sub_sub = \
-                PostgresDAO.db.query(f"""SELECT sub_sub_category from freq_combined where product_id = %s ;""", (id,),
+                db.query(f"""SELECT sub_sub_category from freq_combined where product_id = %s ;""", (productid,),
                                      expect_return=True)[0][0]
-                # query de meest gecombineerde sub_sub_category
-                average_price, std = PostgresDAO.db.query(
+                # find the average price and standard deviation of that sub_sub_category
+                average_price, std = db.query(
                     f"""SELECT average_price, standard_deviation FROM sub_sub_category_price_information WHERE sub_sub_category = %s """,
                     (most_combined_sub_sub,), expect_return=True)[0]
-                recommendations = PostgresDAO.db.query(
+                # find products in the most frequently combined sub_sub_category where selling price is between a certain range according to the profile's
+                # budget preference
+                # the dictionary param budget determines howmany std deviations higher or lower the selling price should be from the average price
+                # with a max price difference of 15%
+                recommendations = db.query(
                     f"""SELECT product_id FROM products where sub_sub_category = %s and selling_price between %s and %s""",
                     (most_combined_sub_sub,
                      (average_price + (std * budget[budget_preference])) * 0.85,
@@ -66,22 +86,29 @@ class Recom(Resource):
                     expect_return=True)
                 for rec in recommendations:
                     all_recommendations.append(rec[0])
+            # return the required amount of recommendations from all_recommendations
             return tuple(random.sample(all_recommendations, count)), 200
-
-
 
     def get(self, count, productid, rec_type, profileid):
         """ This function represents the handler for GET requests coming in
-        through the API. It currently queries the simple_recommendation table
-    in PostgreSQL, and returns the 4 most popular products. If the requested count != 4,
-    returns status code 418"""
+        through the API. receives request from the front end with which recommendation_rule a recommendation should be made and the
+        productids/profileid of the current session in the front_end.
+        args:
+            count: amount recommendations requested.
+            productid: productid(s) depending from where the request is send (productpage, shoppingcart etc).
+            rec_type: string of the recommendation rule that must be used to fulfill the recommendations.
+            profileid: profileid of the current session.
+        Returns:
+            If no errors occured return status code 200
+            If the requested count != 4, returns status code 418"""
         if count != 4:
             return ([], 418)
         if rec_type == 'popularity_rec':
             return PostgresDAO.db.query("SELECT * FROM popularity_recommendation;", expect_return=True)[0], 200
         elif rec_type == 'freq_combined_sub_sub_category':
-            return Recom.freq_combined_sub_sub_category_decision(PostgresDAO.db, count, productid, rec_type, profileid)
-
+            return Recom.freq_combined_sub_sub_category_decision(PostgresDAO.db, count, productid, {'Luxury': 0.5,
+                  'Normal': 0,
+                  'Budget': -0.5}, profileid)
         elif rec_type == 'sub_sub_category_price_rec':
             return PostgresDAO.db.query("""SELECT pro1, pro2, pro3, pro4 FROM sub_sub_category_price_rec where prod_id = %s""", (productid,), expect_return=True)[0], 200
 

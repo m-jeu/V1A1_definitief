@@ -222,19 +222,23 @@ class HUWebshop(object):
 
     """ ..:: Recommendation Functions ::.. """
 
-    def recommendations(self, count, rec, product_id='oo'):
+    def recommendations(self, count, rec_rule, product_id='nothing'):
         """ This function returns the recommendations from the provided page
         and context, by sending a request to the designated recommendation
-        service. At the moment, it only transmits the profile ID and the number
-        of expected recommendations; to have more user information in the REST
-        request, this function would have to change."""
+        service.
+        args:
+            count: integer of the quantity recommendations requested
+            rec_rule: string of the recommendation rule that must be used
+            product_id: string of the productid(s), if no product_id is needed for the recommendations product_id is string 'nothing'
+        returns:
+            result of the recommendation request if status code 200 else an empty list"""
 
-        if rec == 'popularity_rec':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + "nothing" + "/" + rec + "/" + session['profile_id'])
-        elif rec == 'sub_sub_category_price_rec':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec+ "/" + session['profile_id'])
-        elif rec == 'freq_combined_sub_sub_category':
-            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec+ "/" + session['profile_id'])
+        if rec_rule == 'popularity_rec':
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec_rule + "/" + session['profile_id'])
+        elif rec_rule == 'sub_sub_category_price_rec':
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec_rule + "/" + session['profile_id'])
+        elif rec_rule == 'freq_combined_sub_sub_category':
+            resp = requests.get(self.recseraddress + "/" + str(count) + "/" + product_id + "/" + rec_rule + "/" + session['profile_id'])
         if resp.status_code == 200:
             recs = eval(resp.content.decode())
             queryfilter = {"_id": {"$in": recs}}
