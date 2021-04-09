@@ -214,6 +214,6 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
 if __name__ == "__main__":
     #To timetravel when running the script,
     #uncomment the line below, and enter your desired destination as parameters as DD, MM, YYYY
-    #ime_travel(22, 7, 2018, DATASET_START, DATASET_END)
+    #time_travel(22, 7, 2018, DATASET_START, DATASET_END)
     popularity_recommendation(TODAY, PostgresDAO.db)
 
