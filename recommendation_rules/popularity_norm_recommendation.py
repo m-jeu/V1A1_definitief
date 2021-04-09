@@ -207,10 +207,13 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
     query_functions.create_rec_table_query(PostgresDAO.db, 'popularity_recommendation', '')
     db.query("INSERT INTO popularity_recommendation VALUES %s", insert_dataset, commit_changes=True)
 
-
+#NOTE: If you want to change the score multiplier sensitivity, do so in the default parameters for
+#score_multiplier. Not a parameter for popularity_recommendation of purpose, because the function is quite easy to
+#break if not correctly configuring the upper_bound parameter.
 
 if __name__ == "__main__":
     #To timetravel when running the script,
     #uncomment the line below, and enter your desired destination as parameters as DD, MM, YYYY
     #ime_travel(22, 7, 2018, DATASET_START, DATASET_END)
     popularity_recommendation(TODAY, PostgresDAO.db)
+
