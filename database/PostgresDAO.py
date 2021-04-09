@@ -113,8 +113,8 @@ class PostgreSQLdb:
                 May contain '%s' in place of parameters to let psycopg2 automatically format them.
                 The values to replace the %s's with can be passed with the parameters parameter.
             parameters: tuple containing parameters to replace the %s's in the query with.
-            expect_return: bool for wether the query should expect a return.
-            commit_changes: bool for wether changes were made to the DB that need to be committed.
+            expect_return: bool for whether the query should expect a return.
+            commit_changes: bool for whether changes were made to the DB that need to be committed.
 
         Returns:
             if expect_return:
