@@ -45,4 +45,4 @@ Then run the required scripts to fill the recommendation tables in the PosstgreS
 7. run recommendation_rules/popularity_norm_recommendation.py
 8. run recommendation_rules/propositional_logic_recommendation.py
 
-The recommendation engine is now ready to be used in the front-end by running huw_recommend.py and huw.py in front_end/
+The recommendation engine is now ready to be used in the front-end by running huw_recommend.sh and huw.sh in front_end/
