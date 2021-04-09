@@ -149,7 +149,7 @@ class Profile:
     @staticmethod
     def get_all_from_pg(db: PostgresDAO.PostgreSQLdb, product_attribute: str):
         """Call get_attribute_price_information() and profile_order_products_from_postgreSQL to get all
-        necesary information to add all products by a profile with the relevant attributes to Profile.tracker.
+        necessary information to add all products by a profile with the relevant attributes to Profile.tracker.
 
         Args:
             db: The PostgreSQL database to query.
