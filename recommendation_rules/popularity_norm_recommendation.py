@@ -216,11 +216,6 @@ def start_popularity_norm_recommendation():
     print("Finished popularity based recommendation.")
 
 
-def start_time_travel(day, month, year):
-    """This function is being called by the control panel to set the date of TODAY as the time put into the control panel"""
-    time_travel(day, month, year, DATASET_START, DATASET_END)
-    print(f"traveled through time to: {day}, {month}, {year}")
-
 
 if __name__ == "__main__":
     # to change the current date remove comment before next line and insert data in ()

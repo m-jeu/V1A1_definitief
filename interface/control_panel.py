@@ -79,7 +79,9 @@ def start_time_travel():
     time = (time_day.get(), time_month.get(), time_year.get())
     time = " ".join(time)
     day, month, year = map(int, time.split())
-    popularity_norm_recommendation.start_time_travel(day, month, year)
+    popularity_norm_recommendation.time_travel(day, month, year,
+                                               popularity_norm_recommendation.DATASET_START,
+                                               popularity_norm_recommendation.DATASET_END)
 
 
 def start_generate_all():
