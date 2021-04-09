@@ -46,3 +46,6 @@ Then run the required scripts to fill the recommendation tables in the PosstgreS
 8. run recommendation_rules/propositional_logic_recommendation.py
 
 The recommendation engine is now ready to be used in the front-end by running huw_recommend.sh and huw.sh in front_end/
+
+Note:
+A seperate control panel has been implemented to allow for the easy testing of different settings for recommendation rules. This hasn't quite been finished yet, so it's still missing some functionality and might crash. Run at your own risk!
