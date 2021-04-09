@@ -70,7 +70,7 @@ def start_subsubcat_price_information():
 def start_popularity():
     """This function is being called by the ui,
      it starts the popularity_norm_recommendation"""
-    popularity_norm_recommendation.popularity_norm_recommendation(popularity_norm_recommendation.TODAY, PostgresDAO.db)
+    popularity_norm_recommendation.popularity_recommendation(popularity_norm_recommendation.TODAY, PostgresDAO.db)
 
 
 def start_time_travel():
