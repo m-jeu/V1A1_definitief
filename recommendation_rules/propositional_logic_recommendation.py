@@ -41,7 +41,7 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     will fill the table with products that are in the same sub_sub_category and the price is between 80 & 120 % as current product
     args:
         db: is a PostgresDAO.database object used to connect with the psql database
-        table: tablename where the recommendation will be stored. ~~ recommendation name
+        table: table name where the recommendation will be stored. ~~ recommendation name
         pandas_query: the filter query including %s formats where the values of the current product must be formatted
         query_attributes: the attributes needed to format in the pandas query
         diff:         the maximum difference in price for to be 'similar' ex: 0.15 is a maximum price diff of 15%
@@ -56,7 +56,7 @@ def propositional_logic_recommendation(db, table, pandas_query, query_attributes
     db._close_connection()
     # list where all recommendations will be stored so they can be inserted into psql at once.
     all_recommendations = []
-    # for all indexes in length of df (will be used to itterate over each product)
+    # for all indexes in length of df (will be used to iterate over each product)
     for i in range(0, len(df)):
         # attribute values of the current product
         # ex: ('8532', 'Deodorant') if we ['product_id', 'sub_sub_category'] is used as param for column
