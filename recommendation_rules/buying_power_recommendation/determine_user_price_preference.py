@@ -84,8 +84,6 @@ class OrderedProduct:
         self.profile_id, self.attribute_value, self.quantity, self.price = order_tuple
         self.devs_from_avg = ((att_price_info[self.attribute_value][0] - self.price) / att_price_info[self.attribute_value][1])
 
-A, B, C = 0, 0, 0
-
 
 class Profile:
     """A profile.
