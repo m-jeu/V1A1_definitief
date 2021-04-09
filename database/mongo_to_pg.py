@@ -97,11 +97,11 @@ def simple_mongo_to_sql(mongo_collection_name: str,
             an integer that represents the first n attributes in both of the attribute lists.
             any entries that have the value null within these attributes will not be entered into PostGreSQL.
         remember_unique_attributes:
-            the index of an attribute that entries in existance have to be stored in python for.
-            if True, returns set of all entries of a certain attribute in existance.
+            the index of an attribute that entries in existence have to be stored in python for.
+            if True, returns set of all entries of a certain attribute in existence.
 
     Returns:
-        if remember_unique_attributes is True, returns set of all entries of a certain attribute in existance.
+        if remember_unique_attributes is True, returns set of all entries of a certain attribute in existence.
         returns None otherwise
         """
     collection = MongodbDAO.getDocuments(mongo_collection_name)
