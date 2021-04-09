@@ -208,14 +208,6 @@ def popularity_recommendation(current_date: datetime.datetime, db: PostgresDAO.P
     db.query("INSERT INTO popularity_recommendation VALUES %s", insert_dataset, commit_changes=True)
 
 
-def start_popularity_norm_recommendation():
-    """This function is being called by the control panel to start the popularity_recommendation function"""
-    print("--START popularity_norm_recommendation--", end="\n\n\n")
-    print("Creating popularity based recommendation.")
-    popularity_recommendation(TODAY, PostgresDAO.db)
-    print("Finished popularity based recommendation.")
-
-
 
 if __name__ == "__main__":
     # to change the current date remove comment before next line and insert data in ()
